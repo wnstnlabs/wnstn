@@ -1,0 +1,1 @@
+ALTER TABLE "site" ALTER COLUMN "verification_record" SET DEFAULT '';

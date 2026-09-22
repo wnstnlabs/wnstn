@@ -1,0 +1,52 @@
+{
+  "name": "@wnstn/canopy/nextjs",
+  "version": "0.1.0",
+  "description": "Next.js integration for @wnstn/canopy analytics",
+  "type": "module",
+  "main": "./dist/canopy-nextjs.cjs.js",
+  "module": "./dist/canopy-nextjs.es.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/canopy-nextjs.es.js",
+      "require": "./dist/canopy-nextjs.cjs.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "dev": "vite build --watch",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": ["analytics", "privacy", "nextjs", "canopy"],
+  "author": "wnstn",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/winston/wnstn",
+    "directory": "packages/canopy/nextjs"
+  },
+  "dependencies": {
+    "@wnstn/canopy": "workspace:*",
+    "effect": "^3.21.4"
+  },
+  "peerDependencies": {
+    "next": ">=14",
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "next": { "optional": true },
+    "react": { "optional": true }
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "next": "^16.3.4",
+    "react": "^19.2.7",
+    "typescript": "^5.9.2",
+    "vite": "^5.0.0"
+  }
+}
