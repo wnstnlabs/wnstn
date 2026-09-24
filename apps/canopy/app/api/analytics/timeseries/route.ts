@@ -61,9 +61,7 @@ export async function GET(request: Request) {
     } else {
       sitesQuery = sitesQuery.where(eq(site.createdById, session.user.id));
     }
-    if (activeOrgId) {
-      sitesQuery = sitesQuery.where(eq(site.organizationId, activeOrgId));
-    }
+    // Don't filter by activeOrgId - user should have access to all their sites
     const sites = (yield* Effect.tryPromise({ try: () => sitesQuery, catch: () => [] as any })) as any[];
     const hasAccess = sites.some((s: any) => s.id === siteId);
     if (!hasAccess) {
@@ -81,13 +79,13 @@ export async function GET(request: Request) {
     const rows = yield* Effect.tryPromise({
       try: () => db
         .select({
-          bucket: sql.raw(`date_trunc('${interval}', ${event.createdAt})`).as('bucket'),
+          bucket: sql`date_trunc(${sql.raw(`'${interval}'`)}, ${event.createdAt})`.as('bucket'),
           count: sql<number>`count(*)::int`,
         })
         .from(event)
         .where(and(...conditions))
-        .groupBy(sql.raw(`date_trunc('${interval}', ${event.createdAt})`))
-        .orderBy(sql.raw(`date_trunc('${interval}', ${event.createdAt})`)),
+        .groupBy(sql`date_trunc(${sql.raw(`'${interval}'`)}, ${event.createdAt})`)
+        .orderBy(sql`bucket`),
       catch: () => [] as any,
     });
 
@@ -98,9 +96,12 @@ export async function GET(request: Request) {
     }));
   });
 
-  const result = await CanopyRuntime.runPromise(program.pipe(Effect.catchAll((e) => Effect.succeed({ error: String(e) }))));
+  const result = await CanopyRuntime.runPromise(
+    program.pipe(Effect.catchAll((e) => Effect.succeed({ error: e instanceof Error ? e.message : String(e) })))
+  ) as { error: string } | { timestamp: string; value: number; label: string }[];
   
   if ('error' in result) {
+    console.error('Timeseries API Error:', result.error);
     return new Response(JSON.stringify({ error: result.error }), { status: 500 });
   }
 

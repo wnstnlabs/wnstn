@@ -45,7 +45,7 @@ export async function GET() {
       });
     }
     const activeId = (session as any)?.session?.activeOrganizationId ?? null;
-    if (activeId) sites = sites.filter((s: any) => s.organizationId === activeId);
+    // Don't filter by activeOrgId - return all sites user has access to
     return sites;
   });
 

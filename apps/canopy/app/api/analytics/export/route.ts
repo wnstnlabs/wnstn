@@ -63,7 +63,7 @@ export async function GET(request: Request) {
       sql`${site.organizationId} IN (${orgIds.join(',')}) OR ${site.createdById} = ${session.user.id}`
     );
     else sitesQuery = sitesQuery.where(eq(site.createdById, session.user.id));
-    if (activeOrgId) sitesQuery = sitesQuery.where(eq(site.organizationId, activeOrgId));
+    // Don't filter by activeOrgId - user should have access to all their sites
     const sites = (yield* Effect.tryPromise({
       try: () => sitesQuery,
       catch: () => [] as any,

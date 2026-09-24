@@ -60,9 +60,7 @@ export async function GET(request: Request) {
     } else {
       sitesQuery = sitesQuery.where(eq(site.createdById, session.user.id));
     }
-    if (activeOrgId) {
-      sitesQuery = sitesQuery.where(eq(site.organizationId, activeOrgId));
-    }
+    // Don't filter by activeOrgId - user should have access to all their sites
     const sites = (yield* Effect.tryPromise({ try: () => sitesQuery, catch: () => [] as any })) as any[];
     const hasAccess = sites.some((s: any) => s.id === siteId);
     if (!hasAccess) {

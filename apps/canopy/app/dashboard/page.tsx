@@ -49,7 +49,8 @@ export default async function DashboardPage({
       });
     }
     const activeId = (session as any)?.session?.activeOrganizationId ?? null;
-    if (activeId) sites = sites.filter((s: any) => s.organizationId === activeId);
+    // Don't filter by activeOrgId if user explicitly selected a site via URL
+    if (activeId && !siteIdParam) sites = sites.filter((s: any) => s.organizationId === activeId);
     const current = siteIdParam ? sites.find((s) => s.id === siteIdParam) ?? sites[0] : sites[0];
 
     // Live badge count (cheap query, rest is client-side)

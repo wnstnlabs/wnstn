@@ -17,6 +17,9 @@ export function WorkspaceSwitcher({ orgs, activeId, activeName }: { orgs: Org[];
     try {
       await (authClient as any).organization.setActive({ organizationId: id });
     } catch {}
+    // After switching workspace, redirect to dashboard without site param
+    // so server picks the first site in the new workspace
+    router.push('/dashboard');
     router.refresh();
   };
 
@@ -31,6 +34,7 @@ export function WorkspaceSwitcher({ orgs, activeId, activeName }: { orgs: Org[];
     setCreating(false);
     setNewName('');
     setOpen(false);
+    router.push('/dashboard');
     router.refresh();
   };
 

@@ -20,16 +20,22 @@ import {
 } from 'recharts';
 import { cn } from '@/lib/utils';
 
-const COLORS = [
-  '#3b82f6', // blue
-  '#22c55e', // green
+const BRAND_COLORS = [
+  '#ff4d00', // canopy.500 - primary orange
   '#f59e0b', // amber
-  '#ef4444', // red
-  '#8b5cf6', // violet
   '#ec4899', // pink
+  '#8b5cf6', // violet
   '#06b6d4', // cyan
+  '#22c55e', // green
+  '#ef4444', // red
   '#84cc16', // lime
 ];
+
+const GRID_COLOR = 'rgba(255,255,255,0.04)';
+const AXIS_COLOR = 'rgba(255,255,255,0.35)';
+const TEXT_MUTED = 'rgba(255,255,255,0.5)';
+const TOOLTIP_BG = '#0a0a0c';
+const TOOLTIP_BORDER = 'rgba(255,255,255,0.08)';
 
 interface TimeSeriesChartProps {
   data: Array<{ timestamp: string; value: number; label: string }>;
@@ -48,7 +54,7 @@ export function TimeSeriesChart({
   data,
   className,
   height = 200,
-  color = COLORS[0],
+  color = BRAND_COLORS[0],
   showArea = true,
   showGrid = true,
   showTooltip = true,
@@ -83,16 +89,16 @@ export function TimeSeriesChart({
     <div className={cn('w-full', className)}>
       <ResponsiveContainer width="100%" height={height}>
         <ChartComponent data={formattedData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-          {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
+          {showGrid && <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} vertical={false} />}
           <XAxis
             dataKey={labelKey}
-            tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }}
+            tick={{ fill: TEXT_MUTED, fontSize: 10 }}
             axisLine={false}
             tickLine={false}
             interval="preserveStartEnd"
           />
           <YAxis
-            tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }}
+            tick={{ fill: TEXT_MUTED, fontSize: 10 }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(value) => value >= 1000 ? `${(value/1000).toFixed(1)}k` : value}
@@ -100,8 +106,8 @@ export function TimeSeriesChart({
           {showTooltip && (
             <Tooltip
               contentStyle={{
-                backgroundColor: '#0a0a0c',
-                border: '1px solid rgba(255,255,255,0.1)',
+                backgroundColor: TOOLTIP_BG,
+                border: `1px solid ${TOOLTIP_BORDER}`,
                 borderRadius: '12px',
                 boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
               }}
@@ -116,8 +122,8 @@ export function TimeSeriesChart({
             fill={color}
             strokeWidth={2}
             dot={false}
-            activeDot={{ r: 6, strokeWidth: 2 }}
-            fillOpacity={showArea ? 0.15 : 0}
+            activeDot={{ r: 6, strokeWidth: 2, fill: '#fff', stroke: color }}
+            fillOpacity={showArea ? 0.12 : 0}
           />
         </ChartComponent>
       </ResponsiveContainer>
@@ -154,7 +160,7 @@ export function BarChartComponent({
 
   const displayData = data.slice(0, maxBars).map((d, i) => ({
     ...d,
-    color: COLORS[i % COLORS.length],
+    color: BRAND_COLORS[i % BRAND_COLORS.length],
     label: d.key.length > 30 ? d.key.slice(0, 27) + '...' : d.key,
   }));
 
@@ -163,51 +169,51 @@ export function BarChartComponent({
       <ResponsiveContainer width="100%" height={height}>
         {horizontal ? (
           <BarChart data={displayData} layout="vertical" margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} vertical={false} />
-            <XAxis type="number" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} axisLine={false} tickLine={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} horizontal={false} vertical={false} />
+            <XAxis type="number" tick={{ fill: TEXT_MUTED, fontSize: 10 }} axisLine={false} tickLine={false} />
             <YAxis
               type="category"
               dataKey="label"
               width={horizontal ? 200 : 80}
-              tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
+              tick={{ fill: TEXT_MUTED, fontSize: 11 }}
               axisLine={false}
               tickLine={false}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#0a0a0c',
-                border: '1px solid rgba(255,255,255,0.1)',
+                backgroundColor: TOOLTIP_BG,
+                border: `1px solid ${TOOLTIP_BORDER}`,
                 borderRadius: '12px',
               }}
               formatter={((value: any) => [Number(value).toLocaleString(), '']) as any}
             />
             <Bar dataKey="count" radius={[0, 4, 4, 0]}>
               {displayData.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                <Cell key={`cell-${index}`} fill={BRAND_COLORS[index % BRAND_COLORS.length]} />
               ))}
             </Bar>
           </BarChart>
         ) : (
           <BarChart data={displayData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+            <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
             <XAxis
               dataKey="label"
-              tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }}
+              tick={{ fill: TEXT_MUTED, fontSize: 10 }}
               axisLine={false}
               tickLine={false}
             />
-            <YAxis tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: TEXT_MUTED, fontSize: 10 }} axisLine={false} tickLine={false} />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#0a0a0c',
-                border: '1px solid rgba(255,255,255,0.1)',
+                backgroundColor: TOOLTIP_BG,
+                border: `1px solid ${TOOLTIP_BORDER}`,
                 borderRadius: '12px',
               }}
               formatter={((value: any) => [Number(value).toLocaleString(), '']) as any}
             />
             <Bar dataKey="count" radius={[4, 4, 0, 0]}>
               {displayData.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                <Cell key={`cell-${index}`} fill={BRAND_COLORS[index % BRAND_COLORS.length]} />
               ))}
             </Bar>
           </BarChart>
@@ -246,7 +252,7 @@ export function PieChartComponent({
 
   const displayData = data.slice(0, maxSlices).map((d, i) => ({
     ...d,
-    color: COLORS[i % COLORS.length],
+    color: BRAND_COLORS[i % BRAND_COLORS.length],
     label: d.key.length > 20 ? d.key.slice(0, 17) + '...' : d.key,
   }));
 
@@ -278,13 +284,13 @@ export function PieChartComponent({
             labelLine={false}
           >
             {displayData.map((_, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell key={`cell-${index}`} fill={BRAND_COLORS[index % BRAND_COLORS.length]} />
             ))}
           </Pie>
           <Tooltip
             contentStyle={{
-              backgroundColor: '#0a0a0c',
-              border: '1px solid rgba(255,255,255,0.1)',
+              backgroundColor: TOOLTIP_BG,
+              border: `1px solid ${TOOLTIP_BORDER}`,
               borderRadius: '12px',
             }}
             formatter={((value: any) => [Number(value).toLocaleString(), '']) as any}

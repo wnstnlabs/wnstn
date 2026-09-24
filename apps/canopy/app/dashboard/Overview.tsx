@@ -134,7 +134,7 @@ export function DashboardOverview({ siteId }: { siteId: string }) {
   const tsData = timeSeriesData!;
 
   return (
-    <div className="space-y-6">
+    <div className="px-4 md:px-7 max-w-[1120px] w-full mx-auto space-y-6">
       {/* Header with range selector */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
