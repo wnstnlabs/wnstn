@@ -1,0 +1,24 @@
+{
+  "rewrites": [
+    {
+      "source": "/_mintlify/:path*",
+      "destination": "https://cano-py.mintlify.site/_mintlify/:path*"
+    },
+    {
+      "source": "/api/request",
+      "destination": "https://cano-py.mintlify.site/_mintlify/api/request"
+    },
+    {
+      "source": "/docs",
+      "destination": "https://cano-py.mintlify.site/docs"
+    },
+    {
+      "source": "/docs/:match*",
+      "destination": "https://cano-py.mintlify.site/docs/:match*"
+    },
+    {
+      "source": "/mintlify-assets/:path+",
+      "destination": "https://cano-py.mintlify.site/mintlify-assets/:path+"
+    }
+  ]
+}
