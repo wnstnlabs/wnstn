@@ -1,0 +1,44 @@
+---
+title: "Privacy & compliance"
+description: "What Canopy collects, what it never collects, and why it is GDPR-friendly."
+---
+
+Canopy is cookieless and privacy-preserving by design. This page documents exactly what is collected.
+
+## What is collected
+
+| Field | Purpose |
+| - | - |
+| Event name | `pageview`, `outbound`, or custom events |
+| Page URL, path, title | What page was viewed |
+| Referrer | Where the visitor came from |
+| Viewport width | Screen class (mobile/desktop) |
+| Session ID | Random, per-session ID — no cookies |
+| IP hash | Salted SHA-256 hash, truncated to 16 characters |
+| Country | Derived from CDN headers when present |
+| Props | Custom properties you send |
+
+## What is never collected
+
+- **No cookies** — nothing is stored in the visitor's browser
+- **No raw IP addresses** — only truncated salted hashes
+- **No fingerprinting** — no localStorage, no canvas or device fingerprints
+- **No cross-site tracking** — events post to your own domain
+
+## Do Not Track
+
+The tracker respects the browser's Do Not Track signal by default. Visitors with DNT enabled are never tracked. To override (not recommended):
+
+```html
+<script src="/p.js" data-site-id="canopy_example_com" data-respect-dnt="false" async></script>
+```
+
+## GDPR notes
+
+- No consent banner is required for cookieless, non-identifying analytics in most jurisdictions — but you are responsible for your own compliance posture
+- IP hashes are pseudonymized with a server-side salt (`CANOPY_IP_SALT`) that only you control
+- All data lives in your own Postgres database — delete it at any time
+
+<Tip>
+Set a strong `CANOPY_IP_SALT` in production. The default dev salt is only suitable for local development.
+</Tip>

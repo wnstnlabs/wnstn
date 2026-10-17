@@ -1,0 +1,132 @@
+---
+title: "Analytics API"
+description: "Query your analytics data — the /api/analytics endpoints."
+---
+
+All analytics endpoints require an authenticated session and are scoped to your workspace. They return JSON.
+
+## Overview
+
+Aggregated stats for a site — totals, bounce rate, session duration, top pages/referrers/countries, and a time series.
+
+```http
+GET /api/analytics/overview?siteId=canopy_example_com&range=7d
+```
+
+<ParamField name="siteId" type="string" required>
+Site ID to query.
+</ParamField>
+
+<ParamField name="range" type="string">
+One of `1h`, `24h`, `7d`, `30d`, `90d`. Default `7d`.
+</ParamField>
+
+```json
+{
+  "totalEvents": 1284,
+  "totalPageviews": 1102,
+  "uniqueVisitors": 389,
+  "bounceRate": 42.1,
+  "avgSessionDuration": 94500,
+  "topPages": [{ "key": "/", "count": 512, "percentage": 46.5 }],
+  "topReferrers": [{ "key": "news.ycombinator.com", "count": 210, "percentage": 16.4 }],
+  "topCountries": [{ "key": "US", "count": 402, "percentage": 31.3 }],
+  "timeSeries": [{ "timestamp": "...", "value": 42, "label": "Sep 28, 22:00" }]
+}
+```
+
+## Time series
+
+Chart-ready data points.
+
+```http
+GET /api/analytics/timeseries?siteId=canopy_example_com&range=7d&interval=hour
+```
+
+<ParamField name="interval" type="string">
+Bucket size: `minute`, `hour`, or `day`. Default `hour`.
+</ParamField>
+
+## Top pages
+
+```http
+GET /api/analytics/top-pages?siteId=canopy_example_com&range=7d&limit=20
+```
+
+<ParamField name="eventName" type="string">
+Filter by event name. Defaults to `pageview`.
+</ParamField>
+
+<ParamField name="limit" type="number">
+Max rows to return. Default `20`.
+</ParamField>
+
+## Top referrers
+
+```http
+GET /api/analytics/top-referrers?siteId=canopy_example_com&range=7d
+```
+
+## Top countries
+
+```http
+GET /api/analytics/top-countries?siteId=canopy_example_com&range=7d
+```
+
+## Realtime
+
+Live visitor data for a rolling window.
+
+```http
+GET /api/analytics/realtime?siteId=canopy_example_com&window=60
+```
+
+<ParamField name="window" type="number">
+Window size in seconds. Default `60`.
+</ParamField>
+
+```json
+{
+  "activeVisitors": 7,
+  "pageviewsPerMinute": 3.5,
+  "eventsPerMinute": 5.2,
+  "topActivePages": [{ "key": "/", "count": 4, "percentage": 57.1 }],
+  "recentEvents": [{ "id": "evt_...", "name": "pageview", "path": "/", "timestamp": "..." }]
+}
+```
+
+## Event log
+
+Paginated, filterable event log.
+
+```http
+GET /api/analytics/events?siteId=canopy_example_com&range=7d&limit=100&offset=0
+```
+
+<ParamField name="eventName" type="string">
+Filter by event name.
+</ParamField>
+
+<ParamField name="offset" type="number">
+Rows to skip. Use with `limit` for pagination.
+</ParamField>
+
+## Export
+
+Download events as CSV or JSON.
+
+```http
+GET /api/analytics/export?siteId=canopy_example_com&format=csv
+```
+
+<ParamField name="format" type="string">
+`csv` or `json`. Default `csv`.
+</ParamField>
+
+<ParamField name="limit" type="number">
+Max rows. Default `10000`, capped at `50000`.
+</ParamField>
+
+<Note>
+All endpoints return `401` without a session. Site access is verified against your workspace memberships — sites you can see in the dashboard are the sites you can query.
+</Note>

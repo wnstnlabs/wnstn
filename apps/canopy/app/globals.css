@@ -1,52 +1,53 @@
 @import "tailwindcss";
 
-/* ————— Canopy Design System — Linear × Cursor × Neon × Firecrawl —————
-   Graphite nights, forest depth, ember accent. Hairlines, elevation, noise.
+/* ————— Canopy Design System — Slate & Rose —————
+   Cool slate-black surfaces, solid flat panels, rose-coral accent.
+   Hairline borders, technical mono micro-labels, no gradients.
 */
 
 :root {
   /* base */
-  --background: #070709;
-  --background-subtle: #0a0a0c;
-  --foreground: #f4f4f5;
-  --muted: #a1a1aa;
-  --muted-2: #71717a;
+  --background: #0b0d12;
+  --background-subtle: #0e1118;
+  --foreground: #e6e9f0;
+  --muted: #94a3b8;
+  --muted-2: #64748b;
 
   /* surfaces — layered depth */
-  --surface-1: #0f0f12; /* cards */
-  --surface-2: #131316; /* elevated */
-  --surface-3: #1a1a1e; /* hover / popover */
-  --surface-inset: #08080a; /* inset / code */
+  --surface-1: #12151d; /* cards */
+  --surface-2: #171b25; /* elevated */
+  --surface-3: #1c212c; /* hover / popover */
+  --surface-inset: #0d1017; /* inset / code */
 
   /* borders — hairline system */
-  --border: rgba(255,255,255,0.07);
-  --border-strong: rgba(255,255,255,0.11);
-  --border-focus: rgba(255,77,0,0.55);
+  --border: rgba(148,163,184,0.09);
+  --border-strong: rgba(148,163,184,0.16);
+  --border-focus: rgba(251,113,133,0.55);
 
   /* text */
-  --text-1: #f4f4f5;
-  --text-2: #a1a1aa;
-  --text-3: #71717a;
-  --text-4: #52525b;
+  --text-1: #e6e9f0;
+  --text-2: #94a3b8;
+  --text-3: #64748b;
+  --text-4: #475569;
 
   /* brand */
-  --accent: #ff4d00;
-  --accent-hover: #ff5e1a;
-  --accent-muted: rgba(255,77,0,0.14);
-  --accent-ring: rgba(255,77,0,0.28);
-  --success: #10b981;
-  --success-muted: rgba(16,185,129,0.15);
-  --warning: #f59e0b;
+  --accent: #fb7185;
+  --accent-hover: #fda4af;
+  --accent-muted: rgba(251,113,133,0.14);
+  --accent-ring: rgba(251,113,133,0.30);
+  --success: #2dd4bf;
+  --success-muted: rgba(45,212,191,0.14);
+  --warning: #fbbf24;
 
   /* elevation */
-  --shadow-card: 0 1px 0 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.42), 0 2px 8px rgba(0,0,0,0.32);
-  --shadow-elevated: 0 1px 0 0 rgba(255,255,255,0.06) inset, 0 16px 40px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.4);
-  --shadow-inset: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.4);
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.45);
+  --shadow-elevated: 0 8px 32px rgba(0,0,0,0.55);
+  --shadow-inset: inset 0 1px 0 rgba(148,163,184,0.04);
 }
 
-* { scrollbar-width: thin; scrollbar-color: #27272a transparent; }
+* { scrollbar-width: thin; scrollbar-color: #262c3b transparent; }
 *::-webkit-scrollbar { width: 6px; height: 6px; }
-*::-webkit-scrollbar-thumb { background: #232329; border-radius: 999px; }
+*::-webkit-scrollbar-thumb { background: #262c3b; border-radius: 999px; }
 *::-webkit-scrollbar-track { background: transparent; }
 
 html { scroll-behavior: smooth; }
@@ -80,9 +81,9 @@ body::before {
 }
 .radial-vignette {
   background:
-    radial-gradient(1100px 520px at 50% -8%, rgba(255,77,0,0.16), transparent 62%),
-    radial-gradient(900px 460px at 88% 8%, rgba(16,185,129,0.07), transparent 60%),
-    radial-gradient(820px 500px at 6% 18%, rgba(99,102,241,0.09), transparent 60%),
+    radial-gradient(1100px 520px at 50% -8%, rgba(251,113,133,0.14), transparent 62%),
+    radial-gradient(900px 460px at 88% 8%, rgba(45,212,191,0.07), transparent 60%),
+    radial-gradient(820px 500px at 6% 18%, rgba(148,163,184,0.06), transparent 60%),
     linear-gradient(to bottom, rgba(0,0,0,0) 0%, var(--background) 88%);
 }
 .neon-streaks {
@@ -92,7 +93,7 @@ body::before {
   pointer-events: none;
   opacity: 0.38;
   background:
-    repeating-linear-gradient(90deg, rgba(255,77,0,0.06) 0 1px, transparent 1px 88px),
+    repeating-linear-gradient(90deg, rgba(251,113,133,0.06) 0 1px, transparent 1px 88px),
     linear-gradient(to bottom, rgba(255,255,255,0.04), transparent);
   mask-image: linear-gradient(to bottom, black 42%, transparent 100%);
 }
@@ -137,8 +138,8 @@ body::before {
   to { transform: translateX(-50%); }
 }
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255,77,0,0.18), 0 0 32px rgba(255,77,0,0.14); }
-  50% { box-shadow: 0 0 0 7px rgba(255,77,0,0), 0 0 52px rgba(255,77,0,0.20); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251,113,133,0.18), 0 0 32px rgba(251,113,133,0.14); }
+  50% { box-shadow: 0 0 0 7px rgba(251,113,133,0), 0 0 52px rgba(251,113,133,0.20); }
 }
 @keyframes scanline {
   0% { transform: translateY(-100%); }
@@ -183,5 +184,5 @@ body::before {
 
 /* brand mark glow */
 .brand-glow {
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset, 0 4px 16px rgba(255,77,0,0.22), 0 1px 3px rgba(0,0,0,0.4);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset, 0 4px 16px rgba(251,113,133,0.22), 0 1px 3px rgba(0,0,0,0.4);
 }

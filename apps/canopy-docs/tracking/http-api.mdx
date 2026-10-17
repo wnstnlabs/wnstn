@@ -1,0 +1,91 @@
+---
+title: "HTTP API"
+description: "Send events directly to the ingestion endpoint — POST /api/canopy/event."
+---
+
+The ingestion endpoint accepts events from the browser SDK, your server, or anything that can POST JSON.
+
+```http
+POST /api/canopy/event
+Content-Type: application/json
+```
+
+## Request body
+
+<ParamField name="s" type="string" required>
+Site ID, e.g. `canopy_example_com`.
+</ParamField>
+
+<ParamField name="n" type="string" required>
+Event name, e.g. `pageview`. Max 64 characters.
+</ParamField>
+
+<ParamField name="u" type="string">
+Full page URL. Max 2048 characters.
+</ParamField>
+
+<ParamField name="r" type="string">
+Referrer URL. Max 2048 characters.
+</ParamField>
+
+<ParamField name="p" type="string">
+Page path including search, e.g. `/pricing?plan=pro`.
+</ParamField>
+
+<ParamField name="t" type="string">
+Page title. Max 512 characters.
+</ParamField>
+
+<ParamField name="w" type="number">
+Viewport width in pixels.
+</ParamField>
+
+<ParamField name="props" type="object">
+Custom event properties. Stored as JSONB.
+</ParamField>
+
+<ParamField name="sid" type="string">
+Session ID. Max 64 characters.
+</ParamField>
+
+<ParamField name="v" type="string">
+SDK version.
+</ParamField>
+
+<ParamField name="ts" type="number">
+Client timestamp in milliseconds.
+</ParamField>
+
+## Response
+
+| Status | Meaning |
+| - | - |
+| `202` | Event accepted |
+| `400` | Invalid JSON or payload |
+| `404` | Unknown site ID |
+| `500` | Storage failed |
+
+## Example
+
+```bash
+curl -X POST https://canopy.your.app/api/canopy/event \
+  -H "Content-Type: application/json" \
+  -d '{
+    "s": "canopy_example_com",
+    "n": "pageview",
+    "u": "https://example.com/pricing",
+    "p": "/pricing",
+    "t": "Pricing",
+    "w": 1440,
+    "sid": "abc123",
+    "v": "0.1.0"
+  }'
+```
+
+## Privacy handling
+
+The server enriches every event before storing:
+
+- The visitor IP is hashed with SHA-256 and a server-side salt (`CANOPY_IP_SALT`) — raw IPs are never stored
+- Country is derived from the `x-vercel-ip-country` or `cf-ipcountry` header when present
+- Unknown site IDs are rejected in production; in development, sites are auto-created so you can test quickly

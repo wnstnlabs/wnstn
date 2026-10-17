@@ -36,10 +36,10 @@ interface CustomDomain {
   createdAt: string;
 }
 
-export function SettingsDomain({ 
+export function SettingsDomain({
   customDomains = [],
-  siteId 
-}: { 
+  siteId,
+}: {
   customDomains: CustomDomain[];
   siteId: string;
 }) {
@@ -50,6 +50,8 @@ export function SettingsDomain({
   const [adding, setAdding] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [verifying, setVerifying] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
 
   const form = useForm<CustomDomainFormData>({
     resolver: zodResolver(customDomainSchema),
@@ -129,8 +131,8 @@ export function SettingsDomain({
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Custom Domains</h1>
-          <p className="text-zinc-500 mt-1">Use your own domain for tracking and dashboards</p>
+          <h2 className="text-lg font-medium text-white">Custom Domains</h2>
+          <p className="text-slate-500 text-sm mt-1">Use your own domain for tracking and dashboards</p>
         </div>
         <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
           <DialogTrigger asChild>
@@ -149,39 +151,47 @@ export function SettingsDomain({
             <form onSubmit={form.handleSubmit(onAddSubmit)}>
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="domain">Subdomain</Label>
+                  <Label htmlFor="domain" className="text-slate-400 text-sm">Subdomain</Label>
                   <div className="flex gap-2">
                     <Input
                       id="domain"
                       {...form.register('domain')}
                       placeholder="analytics.example.com"
+                      className="bg-white/[0.03] border-white/[0.08] h-10"
                     />
                   </div>
                   {form.formState.errors.domain && (
                     <p className="text-sm text-red-400">{form.formState.errors.domain.message}</p>
                   )}
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-slate-500">
                     Must be a valid subdomain (e.g., analytics.yourdomain.com)
                   </p>
                 </div>
               </div>
-<DialogFooter>
+              <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => { setAddDialogOpen(false); form.reset(); }}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={adding}>
-                  {adding ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Adding...</> : 'Add Domain'}
+                  {adding ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    'Add Domain'
+                  )}
                 </Button>
               </DialogFooter>
-              </form>
-            </DialogContent>
+            </form>
+          </DialogContent>
         </Dialog>
       </div>
 
       {/* DNS Configuration Guide */}
-      <Card className="border-amber-500/30 bg-amber-500/5">
+      <Card className="border-amber-500/20 bg-amber-500/[0.04]">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base font-medium text-white">
             <Shield className="h-5 w-5 text-amber-400" />
             DNS Configuration Required
           </CardTitle>
@@ -190,71 +200,64 @@ export function SettingsDomain({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
+          <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Record Type</Label>
+                <Label className="text-slate-400 text-xs uppercase tracking-wide">Record Type</Label>
                 <code className="mono text-sm bg-black/30 rounded px-3 py-2 block break-all">CNAME</code>
               </div>
               <div className="space-y-2">
-                <Label>Host / Name</Label>
+                <Label className="text-slate-400 text-xs uppercase tracking-wide">Host / Name</Label>
                 <code className="mono text-sm bg-black/30 rounded px-3 py-2 block break-all">
                   {customDomains[0]?.domain ? customDomains[0].domain.split('.')[0] : 'analytics'}
                 </code>
               </div>
               <div className="space-y-2">
-                <Label>Value / Target</Label>
+                <Label className="text-slate-400 text-xs uppercase tracking-wide">Value / Target</Label>
                 <code className="mono text-sm bg-black/30 rounded px-3 py-2 block break-all">
-                  {customDomains[0]?.cnameTarget || 'cname.canopy.wnstn.io'}
+                  {customDomains[0]?.cnameTarget || 'cname.cano-py.wnstn.space'}
                 </code>
               </div>
               <div className="space-y-2">
-                <Label>TTL</Label>
+                <Label className="text-slate-400 text-xs uppercase tracking-wide">TTL</Label>
                 <code className="mono text-sm bg-black/30 rounded px-3 py-2 block">300 (5 minutes)</code>
               </div>
             </div>
           </div>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-slate-500">
             DNS changes can take up to 48 hours to propagate. SSL certificates are provisioned automatically after verification.
           </p>
         </CardContent>
       </Card>
 
       {/* Custom Domains List */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Your Domains</CardTitle>
-          <Button onClick={() => setAddDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Domain
-          </Button>
-        </CardHeader>
+      <Card className="border-white/[0.06] bg-white/[0.015]">
         <CardContent className="pt-0">
           {customDomains.length === 0 ? (
             <div className="text-center py-12">
-              <Globe className="h-12 w-12 mx-auto text-zinc-500 mb-4" />
-              <p className="text-zinc-500">No custom domains yet</p>
-              <p className="text-sm text-zinc-500 mt-2">Add a custom domain to use your own subdomain for tracking</p>
+              <Globe className="h-12 w-12 mx-auto text-slate-500 mb-4" />
+              <p className="text-slate-500">No custom domains yet</p>
+              <p className="text-sm text-slate-500 mt-2">Add a custom domain to use your own subdomain for tracking</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="border-white/[0.06]">
                   <TableHead>Domain</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>SSL</TableHead>
-                  <TableHead className="w-12">Created</TableHead>
+                  <TableHead className="w-24 text-slate-500 font-medium">Created</TableHead>
                   <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {customDomains.map((domain) => (
-                  <TableRow key={domain.id}>
+                  <TableRow key={domain.id} className="border-white/[0.04] hover:bg-white/[0.03] transition-colors">
                     <TableCell className="flex items-center gap-3">
-                      <Globe className="h-4 w-4 text-zinc-500" />
+                      <Globe className="h-4 w-4 text-slate-500" />
                       <div>
                         <p className="font-mono text-sm text-white">{domain.domain}</p>
-                        <p className="text-xs text-zinc-500">CNAME → {domain.cnameTarget}</p>
+                        <p className="text-xs text-slate-500">CNAME → {domain.cnameTarget}</p>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -267,12 +270,12 @@ export function SettingsDomain({
                         {domain.sslStatus.charAt(0).toUpperCase() + domain.sslStatus.slice(1)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-zinc-500 mono text-xs">
+                    <TableCell className="text-slate-500 mono text-xs">
                       {new Date(domain.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
                       {!domain.verified && (
-                        <Button variant="ghost" size="icon" onClick={() => handleVerify(domain)} disabled={verifying === domain.id}>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-500 hover:text-white" onClick={() => handleVerify(domain)} disabled={verifying === domain.id}>
                           {verifying === domain.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
                         </Button>
                       )}
@@ -287,8 +290,9 @@ export function SettingsDomain({
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <Trash2 className="h-4 w-4" />
+          <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-400 hover:bg-red-500/10">
+            <Trash2 className="h-4 w-4 mr-2" />
+            Remove Domain
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
@@ -298,7 +302,17 @@ export function SettingsDomain({
               This will remove <strong>{selectedDomain?.domain}</strong> and its SSL certificate. The domain will no longer work for tracking.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogAction onClick={handleDelete} disabled={deleting}>
+          <div className="space-y-4">
+            <Input
+              placeholder="Type domain to confirm"
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+            />
+          </div>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={deleting || deleteConfirm !== selectedDomain?.domain}
+            className="bg-red-500 hover:bg-red-600"
+          >
             {deleting ? 'Removing...' : 'Remove Domain'}
           </AlertDialogAction>
           <AlertDialogCancel>Cancel</AlertDialogCancel>

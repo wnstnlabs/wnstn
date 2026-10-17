@@ -6,17 +6,17 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050507] disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-[13px] font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0d12] disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]',
   {
     variants: {
       variant: {
-        default: 'bg-white text-zinc-900 hover:bg-white/90 shadow-sm border border-white/10',
-        destructive: 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/20',
-        outline: 'border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/20',
-        secondary: 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.07] hover:text-white border border-white/10',
-        ghost: 'text-zinc-400 hover:bg-white/[0.04] hover:text-white',
-        link: 'text-zinc-400 underline-offset-4 hover:underline',
-        success: 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/20',
+        default: 'bg-rose-500 text-white hover:bg-rose-400 shadow-[0_1px_2px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.18)]',
+        destructive: 'bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/25',
+        outline: 'border border-white/[0.09] bg-[#12151d] text-slate-300 hover:bg-[#171b25] hover:border-white/[0.16] hover:text-slate-100',
+        secondary: 'bg-white/[0.05] text-slate-300 hover:bg-white/[0.09] hover:text-white border border-white/[0.06]',
+        ghost: 'text-slate-400 hover:bg-white/[0.05] hover:text-slate-200',
+        link: 'text-rose-400 underline-offset-4 hover:underline',
+        success: 'bg-teal-500/15 text-teal-400 hover:bg-teal-500/25 border border-teal-500/25',
       },
       size: {
         default: 'h-10 px-4 py-2',

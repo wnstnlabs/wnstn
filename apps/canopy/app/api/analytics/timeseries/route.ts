@@ -3,8 +3,10 @@ import { auth } from '@/lib/auth';
 import { Effect } from 'effect';
 import { CanopyRuntime } from '@/lib/effect/runtime';
 import { Db } from '@/lib/effect/db';
-import { event, site, member } from '@/db/schema';
-import { eq, sql, and, gte, inArray, desc } from 'drizzle-orm';
+import { event } from '@/db/schema';
+import { getUserSites } from '@/lib/api/access';
+import { formatBucket } from '@/lib/utils';
+import { eq, sql, and, gte } from 'drizzle-orm';
 
 function getRangeInterval(range: string): { start: Date; interval: 'minute' | 'hour' | 'day' } {
   const now = new Date();
@@ -34,7 +36,9 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const siteId = searchParams.get('siteId');
   const range = searchParams.get('range') || '7d';
-  const interval = searchParams.get('interval') || 'hour';
+  const intervalParam = (['minute', 'hour', 'day'].includes(searchParams.get('interval') || '')
+    ? (searchParams.get('interval') as 'minute' | 'hour' | 'day')
+    : 'hour');
   const eventName = searchParams.get('eventName') || undefined;
 
   if (!siteId) {
@@ -47,22 +51,10 @@ export async function GET(request: Request) {
     const db = yield* Db;
     
     // Verify user has access to this site
-    const myMembers = yield* Effect.tryPromise({
-      try: () => db.select().from(member).where(eq(member.userId, session.user.id)),
+    const sites = (yield* Effect.tryPromise({
+      try: () => getUserSites(db, session.user.id),
       catch: () => [] as any,
-    });
-    const orgIds = myMembers.map((m: any) => m.organizationId);
-    
-    let sitesQuery: any = db.select().from(site);
-    if (orgIds.length > 0) {
-      sitesQuery = sitesQuery.where(
-        sql`${site.organizationId} IN (${orgIds.join(',')}) OR ${site.createdById} = ${session.user.id}`
-      );
-    } else {
-      sitesQuery = sitesQuery.where(eq(site.createdById, session.user.id));
-    }
-    // Don't filter by activeOrgId - user should have access to all their sites
-    const sites = (yield* Effect.tryPromise({ try: () => sitesQuery, catch: () => [] as any })) as any[];
+    })) as any[];
     const hasAccess = sites.some((s: any) => s.id === siteId);
     if (!hasAccess) {
       return { error: 'Site not found or access denied' } as const;
@@ -79,12 +71,12 @@ export async function GET(request: Request) {
     const rows = yield* Effect.tryPromise({
       try: () => db
         .select({
-          bucket: sql`date_trunc(${sql.raw(`'${interval}'`)}, ${event.createdAt})`.as('bucket'),
+          bucket: sql`date_trunc(${sql.raw(`'${intervalParam}'`)}, ${event.createdAt})`.as('bucket'),
           count: sql<number>`count(*)::int`,
         })
         .from(event)
         .where(and(...conditions))
-        .groupBy(sql`date_trunc(${sql.raw(`'${interval}'`)}, ${event.createdAt})`)
+        .groupBy(sql`date_trunc(${sql.raw(`'${intervalParam}'`)}, ${event.createdAt})`)
         .orderBy(sql`bucket`),
       catch: () => [] as any,
     });
@@ -92,7 +84,7 @@ export async function GET(request: Request) {
     return rows.map((row: any) => ({
       timestamp: row.bucket,
       value: row.count,
-      label: new Date(row.bucket).toISOString(),
+      label: formatBucket(new Date(row.bucket), intervalParam),
     }));
   });
 

@@ -21,21 +21,20 @@ import {
 import { cn } from '@/lib/utils';
 
 const BRAND_COLORS = [
-  '#ff4d00', // canopy.500 - primary orange
-  '#f59e0b', // amber
-  '#ec4899', // pink
-  '#8b5cf6', // violet
-  '#06b6d4', // cyan
-  '#22c55e', // green
-  '#ef4444', // red
-  '#84cc16', // lime
+  '#fb7185',
+  '#fb7185',
+  '#fbbf24',
+  '#2dd4bf',
+  '#a78bfa',
+  '#f472b6',
+  '#f97316',
+  '#ef4444',
 ];
 
-const GRID_COLOR = 'rgba(255,255,255,0.04)';
-const AXIS_COLOR = 'rgba(255,255,255,0.35)';
-const TEXT_MUTED = 'rgba(255,255,255,0.5)';
-const TOOLTIP_BG = '#0a0a0c';
-const TOOLTIP_BORDER = 'rgba(255,255,255,0.08)';
+const GRID_COLOR = 'rgba(148,163,184,0.05)';
+const TEXT_MUTED = 'rgba(148,163,184,0.55)';
+const TOOLTIP_BG = '#12151d';
+const TOOLTIP_BORDER = 'rgba(148,163,184,0.14)';
 
 interface TimeSeriesChartProps {
   data: Array<{ timestamp: string; value: number; label: string }>;
@@ -101,7 +100,7 @@ export function TimeSeriesChart({
             tick={{ fill: TEXT_MUTED, fontSize: 10 }}
             axisLine={false}
             tickLine={false}
-            tickFormatter={(value) => value >= 1000 ? `${(value/1000).toFixed(1)}k` : value}
+            tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value}
           />
           {showTooltip && (
             <Tooltip
@@ -122,8 +121,8 @@ export function TimeSeriesChart({
             fill={color}
             strokeWidth={2}
             dot={false}
-            activeDot={{ r: 6, strokeWidth: 2, fill: '#fff', stroke: color }}
-            fillOpacity={showArea ? 0.12 : 0}
+            activeDot={{ r: 5, strokeWidth: 2, fill: '#fff', stroke: color }}
+            fillOpacity={showArea ? 0.08 : 0}
           />
         </ChartComponent>
       </ResponsiveContainer>
@@ -174,7 +173,7 @@ export function BarChartComponent({
             <YAxis
               type="category"
               dataKey="label"
-              width={horizontal ? 200 : 80}
+              width={horizontal ? 180 : 80}
               tick={{ fill: TEXT_MUTED, fontSize: 11 }}
               axisLine={false}
               tickLine={false}
@@ -313,24 +312,24 @@ interface MetricCardProps {
 
 export function MetricCard({ title, value, change, changeLabel, icon, className, trend = 'neutral' }: MetricCardProps) {
   return (
-    <div className={cn('rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-all hover:border-white/20', className)}>
+    <div className={cn('rounded-xl border border-white/[0.08] bg-[#12151d] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.45)] transition-all hover:border-white/[0.14]', className)}>
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">{title}</p>
-          <p className="mt-2 text-3xl font-semibold text-white truncate">{value}</p>
+          <p className="mono text-[10px] font-medium text-slate-500 uppercase tracking-[0.14em]">{title}</p>
+          <p className="mt-1.5 text-[26px] font-semibold tabular tracking-tight text-slate-100 truncate">{value}</p>
           {change !== undefined && (
-            <div className="mt-2 flex items-center gap-1.5">
+            <div className="mt-1.5 flex items-center gap-1.5">
               <span className={cn(
-                'text-xs font-medium',
-                trend === 'up' ? 'text-emerald-400' : trend === 'down' ? 'text-red-400' : 'text-zinc-500'
+                'text-[11px] font-medium mono',
+                trend === 'up' ? 'text-teal-400' : trend === 'down' ? 'text-red-400' : 'text-slate-500'
               )}>
                 {trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→'} {Math.abs(change).toFixed(1)}%
               </span>
-              {changeLabel && <span className="text-xs text-zinc-500">{changeLabel}</span>}
+              {changeLabel && <span className="text-[11px] text-slate-600">{changeLabel}</span>}
             </div>
           )}
         </div>
-        {icon && <div className="ml-4 text-zinc-500/50">{icon}</div>}
+        {icon && <div className="ml-3 size-9 rounded-lg bg-white/[0.05] border border-white/[0.06] grid place-items-center text-rose-300 shrink-0 [&>svg]:h-4 [&>svg]:w-4">{icon}</div>}
       </div>
     </div>
   );
@@ -344,7 +343,7 @@ interface StatGridProps {
 
 export function StatGrid({ children, className, columns = 4 }: StatGridProps) {
   return (
-    <div className={cn(`grid gap-4`, `grid-cols-${columns}`, 'sm:grid-cols-2 lg:grid-cols-4', className)}>
+    <div className={cn(`grid gap-3`, `grid-cols-${columns}`, 'sm:grid-cols-2 lg:grid-cols-4', className)}>
       {children}
     </div>
   );

@@ -1,208 +1,246 @@
 import Link from 'next/link';
+import { DocsShell, PageTitle, Section, P, C, Sub, CodeWindow, DataTable, Callout, CTA } from '../_components';
 
 export default function APIPage() {
   return (
-    <div className="min-h-screen bg-[#050507] text-zinc-100">
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute inset-0 dark-grid opacity-[0.12]" />
-        <div className="absolute inset-0 radial-vignette" />
-      </div>
+    <DocsShell>
+      <PageTitle title="HTTP API">
+        Canopy is two small APIs. The ingestion endpoint accepts events from the browser tracker, your server, or
+        anything that can POST JSON — no auth, first-party by design. The analytics endpoints are what the dashboard
+        itself calls: session-authenticated reads scoped to your workspace, so anything you can see in the dashboard
+        you can also query programmatically.
+      </PageTitle>
 
-      <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-[var(--background)]/70 backdrop-blur-xl">
-        <div className="mx-auto max-w-[1160px] px-6 h-[56px] flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="size-7 rounded-lg bg-white text-zinc-900 grid place-items-center font-semibold text-[12px]">◯</span>
-            <span className="font-semibold tracking-tight text-sm">canopy</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/docs" className="mono text-[12px] text-zinc-400 hover:text-white">← Docs</Link>
-            <Link href="/dashboard" className="rounded-full bg-white text-zinc-900 px-4 py-[7px] text-[12px] font-medium">Dashboard</Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-[1160px] px-6 py-16">
-        <div className="max-w-[800px]">
-          <h1 className="text-[32px] md:text-[40px] font-semibold tracking-[-0.03em] leading-[1] text-white">HTTP API</h1>
-          <p className="mt-4 text-[15px] leading-7 text-zinc-400 max-w-[640px]">Simple REST endpoints. No API keys for ingestion — first-party by design.</p>
-
-          <div className="mt-12 space-y-16">
-            <section id="ingest">
-              <h2 className="text-[20px] font-semibold tracking-tight text-white flex items-center gap-2"><span className="size-7 rounded-full bg-white text-zinc-900 grid place-items-center text-[14px] font-semibold">1</span> Ingest events</h2>
-              <p className="mt-3 text-[14px] leading-6 text-zinc-400"><code className="bg-white/[0.06] border border-white/[0.06] px-1.5 py-0.5 rounded text-zinc-300">POST /api/canopy/event</code> — accepts single or batch events. No auth, first-party only.</p>
-
-              <h3 className="mt-4 mono text-[11px] tracking-widest text-zinc-500 uppercase">Request</h3>
-              <div className="mt-2 rounded-xl overflow-hidden border border-[var(--border)] bg-[#08080a] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                <pre className="mono text-[12px] leading-5 p-4 text-zinc-300 overflow-x-auto">{`POST /api/canopy/event
+      <div className="mt-12 space-y-16">
+        <Section n="1" id="ingest" title="Ingest events">
+          <P>
+            <C>POST /api/canopy/event</C> accepts a single event per request. There are no API keys — the endpoint
+            is meant to be called from your own site or your own backend, and the server enriches every event
+            (session handling, IP hashing, country) before storing it.
+          </P>
+          <CodeWindow code={`POST /api/canopy/event
 Content-Type: application/json
 
 {
-  "s": "canopy_example_com",  // site ID (required)
-  "n": "pageview",            // event name (required)
+  "s": "canopy_example_com",
+  "n": "pageview",
   "u": "https://example.com/pricing",
   "p": "/pricing",
   "r": "https://google.com",
-  "t": "Pricing - Example",
+  "t": "Pricing — Example",
   "w": 1440,
   "props": { "utm_source": "newsletter" },
-  "sid": "abc123"             // optional session ID
-}`}</pre>
-              </div>
+  "sid": "3f9c2a1e-...",
+  "v": "0.1.0",
+  "ts": 1739755562410
+}`} />
+          <Sub>Fields</Sub>
+          <DataTable
+            columns={['Field', 'Required', 'Limits', 'Description']}
+            rows={[
+              ['s', <span className="text-teal-400">yes</span>, '—', <>Site ID, e.g. <C>canopy_example_com</C>.</>],
+              ['n', <span className="text-teal-400">yes</span>, 'max 64 chars', <>Event name: <C>pageview</C>, <C>outbound</C>, or custom.</>],
+              ['u', 'no', 'max 2048 chars', 'Full page URL.'],
+              ['p', 'no', 'max 2048 chars', <>Path including query, e.g. <C>/pricing?plan=pro</C>.</>],
+              ['r', 'no', 'max 2048 chars', 'Referrer URL.'],
+              ['t', 'no', 'max 512 chars', 'Page title.'],
+              ['w', 'no', 'number', 'Viewport width in pixels.'],
+              ['props', 'no', 'any JSON', 'Custom properties, stored as JSONB.'],
+              ['sid', 'no', 'max 64 chars', 'Session ID. Generated server-side if omitted.'],
+              ['v', 'no', '—', 'Tracker version. Validated, not stored.'],
+              ['ts', 'no', 'number', 'Client timestamp in ms. Validated, not stored.'],
+            ]}
+          />
+          <Sub>Responses</Sub>
+          <DataTable
+            columns={['Status', 'Body', 'When']}
+            firstColMono
+            rows={[
+              ['202', <span className="text-slate-500">(empty)</span>, 'Event accepted and stored.'],
+              ['400', <C>{'{ "error": "invalid json" }'}</C>, 'Body is not parseable JSON.'],
+              ['400', <C>{'{ "error": "invalid payload", "issues": … }'}</C>, 'A field failed validation — issues lists what.'],
+              ['404', <C>{'{ "error": "unknown site" }'}</C>, 'Site ID does not exist (production only — see note below).'],
+              ['500', <C>{'{ "error": "store failed" }'}</C>, 'Database insert failed.'],
+            ]}
+          />
+          <Callout label="development shortcut">
+            Outside production, events for unknown site IDs auto-create the site so you can test before signing up.
+            In production, register the site first or ingestion returns <C>404</C>.
+          </Callout>
+          <Sub>CORS</Sub>
+          <P>
+            Responses allow cross-origin POSTs from any origin (reflected in{' '}
+            <C>Access-Control-Allow-Origin</C>), with preflight caching of 24 hours. That is what lets the tracker
+            live on one host while events post to another — still your infrastructure, no third party involved.
+          </P>
+          <Sub>Server-side enrichment</Sub>
+          <P>
+            Before an event is stored, the server hashes the visitor IP with SHA-256 and a server-side salt — only
+            the first 16 hex characters are kept, and the raw IP is never written. Country is derived from CDN
+            headers when present (<C>x-vercel-ip-country</C> on Vercel, <C>cf-ipcountry</C> on Cloudflare). The full
+            privacy model is documented in <Link href="/docs/privacy" className="text-rose-400 underline underline-offset-2">Privacy & compliance</Link>.
+          </P>
+        </Section>
 
-              <h3 className="mt-4 mono text-[11px] tracking-widest text-zinc-500 uppercase">Fields</h3>
-              <div className="mt-3 overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead>
-                    <tr className="border-b border-white/[0.08] text-zinc-500">
-                      <th className="p-3 mono">Field</th>
-                      <th className="p-3">Required</th>
-                      <th className="p-3">Description</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/[0.04]">
-                    <tr><td className="p-3 mono">s</td><td className="p-3 text-emerald-400">yes</td><td className="p-3">Site ID (e.g. <code>canopy_example_com</code>)</td></tr>
-                    <tr><td className="p-3 mono">n</td><td className="p-3 text-emerald-400">yes</td><td className="p-3">Event name (<code>pageview</code>, <code>checkout</code>, etc.)</td></tr>
-                    <tr><td className="p-3 mono">u</td><td className="p-3">no</td><td className="p-3">Full URL</td></tr>
-                    <tr><td className="p-3 mono">p</td><td className="p-3">no</td><td className="p-3">Path (<code>/pricing</code>)</td></tr>
-                    <tr><td className="p-3 mono">r</td><td className="p-3">no</td><td className="p-3">Referrer URL</td></tr>
-                    <tr><td className="p-3 mono">t</td><td className="p-3">no</td><td className="p-3">Page title</td></tr>
-                    <tr><td className="p-3 mono">w</td><td className="p-3">no</td><td className="p-3">Viewport width</td></tr>
-                    <tr><td className="p-3 mono">props</td><td className="p-3">no</td><td className="p-3">Custom object (any JSON)</td></tr>
-                    <tr><td className="p-3 mono">sid</td><td className="p-3">no</td><td className="p-3">Session ID (auto-generated if omitted)</td></tr>
-                  </tbody>
-                </table>
-              </div>
+        <Section n="2" id="analytics" title="Analytics API">
+          <P>
+            All analytics endpoints live under <C>/api/analytics/*</C>, require a signed-in dashboard session
+            (cookie auth), and are scoped to sites in your workspace — requesting a site you don't belong to is
+            rejected. Missing parameters return <C>400</C>; no session returns <C>401</C>.
+          </P>
+          <Sub>Shared parameters</Sub>
+          <DataTable
+            columns={['Param', 'Values', 'Description']}
+            rows={[
+              ['siteId', <span className="text-teal-400">required</span>, 'Site to query.'],
+              ['range', <><C>1h</C> <C>24h</C> <C>7d</C> <C>30d</C> <C>90d</C></>, <>Time window. Default <C>7d</C>. The time series bucket size follows the range: minute for <C>1h</C>, hour for <C>24h</C>/<C>7d</C>, day for <C>30d</C>/<C>90d</C>.</>],
+              ['eventName', 'string', 'Filter by exact event name where supported.'],
+              ['limit / offset', 'number', 'Pagination on list-style endpoints.'],
+            ]}
+          />
 
-              <h3 className="mt-4 mono text-[11px] tracking-widest text-zinc-500 uppercase">Response</h3>
-              <div className="mt-2 rounded-xl overflow-hidden border border-[var(--border)] bg-[#08080a] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                <pre className="mono text-[12px] leading-5 p-4 text-zinc-300 overflow-x-auto">{`202 Accepted
-(empty body)`}</pre>
-              </div>
-              <p className="mt-2 text-[13px] text-zinc-500">Returns <code className="bg-white/[0.06] border border-white/[0.06] px-1 py-0.5 rounded text-zinc-300">202</code> immediately — event is queued. Batch multiple events by sending an array.</p>
-            </section>
+          <Sub id="overview">Overview — GET /api/analytics/overview</Sub>
+          <P>
+            The numbers behind the dashboard overview: totals, bounce rate, session duration, top lists, and a
+            time series in one call. Accepts extra filters — <C>eventName</C>, <C>path</C> (substring match),{' '}
+            <C>referrer</C> (substring match), <C>country</C> (exact).
+          </P>
+          <CodeWindow label="request" tone="muted" code={`GET /api/analytics/overview?siteId=canopy_example_com&range=7d`} />
+          <CodeWindow label="200 OK" tone="muted" code={`{
+  "totalEvents": 1284,
+  "totalPageviews": 1102,
+  "uniqueVisitors": 389,
+  "bounceRate": 42.1,
+  "avgSessionDuration": 94500,
+  "topPages":     [{ "key": "/", "count": 512, "percentage": 46.5 }],
+  "topReferrers": [{ "key": "news.ycombinator.com", "count": 210, "percentage": 16.4 }],
+  "topCountries": [{ "key": "US", "count": 402, "percentage": 31.3 }],
+  "timeSeries":   [{ "timestamp": "…", "value": 42, "label": "Sep 28, 22:00" }]
+}`} />
+          <P>
+            <C>bounceRate</C> is the percentage of sessions with exactly one pageview, and{' '}
+            <C>avgSessionDuration</C> is in milliseconds.
+          </P>
 
-            <section id="stats">
-              <h2 className="text-[20px] font-semibold tracking-tight text-white flex items-center gap-2"><span className="size-7 rounded-full bg-white text-zinc-900 grid place-items-center text-[14px] font-semibold">2</span> Query stats</h2>
-              <p className="mt-3 text-[14px] leading-6 text-zinc-400"><code className="bg-white/[0.06] border border-white/[0.06] px-1.5 py-0.5 rounded text-zinc-300">GET /api/canopy/stats</code> — requires auth (dashboard session). Returns aggregated counts.</p>
+          <Sub>Time series — GET /api/analytics/timeseries</Sub>
+          <P>Chart-ready buckets with an explicit interval override:</P>
+          <CodeWindow label="request + response" tone="muted" code={`GET /api/analytics/timeseries?siteId=canopy_example_com&range=7d&interval=hour
 
-              <h3 className="mt-4 mono text-[11px] tracking-widest text-zinc-500 uppercase">Query params</h3>
-              <div className="mt-3 overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead>
-                    <tr className="border-b border-white/[0.08] text-zinc-500"><th className="p-3 mono">Param</th><th className="p-3">Type</th><th className="p-3">Description</th></tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/[0.04]">
-                    <tr><td className="p-3 mono">site</td><td className="p-3">string</td><td className="p-3">Site ID (required)</td></tr>
-                    <tr><td className="p-3 mono">range</td><td className="p-3">string</td><td className="p-3"><code>7d</code> (default) | <code>24h</code> | <code>30d</code></td></tr>
-                    <tr><td className="p-3 mono">groupBy</td><td className="p-3">string</td><td className="p-3"><code>day</code> | <code>hour</code> | <code>path</code> | <code>referrer</code> | <code>event</code></td></tr>
-                  </tbody>
-                </table>
-              </div>
+{ "data": [{ "timestamp": "…", "value": 42, "label": "Sep 28, 22:00" }] }`} />
+          <P>
+            <C>interval</C> accepts <C>minute</C>, <C>hour</C>, or <C>day</C> (default <C>hour</C>). Pass{' '}
+            <C>eventName</C> to chart a custom event instead of pageviews.
+          </P>
 
-              <h3 className="mt-4 mono text-[11px] tracking-widest text-zinc-500 uppercase">Example response</h3>
-              <div className="mt-2 rounded-xl overflow-hidden border border-[var(--border)] bg-[#08080a] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                <pre className="mono text-[12px] leading-5 p-4 text-zinc-300 overflow-x-auto">{`GET /api/canopy/stats?site=canopy_example_com&range=7d
+          <Sub>Top lists</Sub>
+          <P>
+            Three endpoints share the same shape — pages, referrers, and countries, ordered by count with
+            percentage of total:
+          </P>
+          <CodeWindow label="requests" tone="muted" code={`GET /api/analytics/top-pages?siteId=…&range=7d&limit=20&eventName=pageview
+GET /api/analytics/top-referrers?siteId=…&range=7d
+GET /api/analytics/top-countries?siteId=…&range=7d
+
+{ "data": [{ "key": "/pricing", "count": 512, "percentage": 46.5 }], "total": 1102 }`} />
+          <P>
+            <C>limit</C> defaults to 20 rows. On top-pages, <C>eventName</C> defaults to <C>pageview</C> — change it
+            to rank any custom event by path. Referrer and country lists exclude empty values.
+          </P>
+
+          <Sub>Realtime — GET /api/analytics/realtime</Sub>
+          <P>Live visitor activity over a rolling window, in seconds:</P>
+          <CodeWindow label="request + response" tone="muted" code={`GET /api/analytics/realtime?siteId=canopy_example_com&window=60
 
 {
-  "site": "canopy_example_com",
-  "range": "7d",
-  "totals": {
-    "visitors": 12400,
-    "pageviews": 28700,
-    "events": 11200,
-    "uniques": 8400
-  },
-  "series": [
-    { "day": "2024-01-15", "visitors": 1800, "pageviews": 4200 },
-    { "day": "2024-01-16", "visitors": 1920, "pageviews": 4500 }
-  ],
-  "topPaths": [
-    { "path": "/", "views": 4200, "uniques": 3100 },
-    { "path": "/pricing", "views": 2800, "uniques": 2100 }
-  ],
-  "topReferrers": [
-    { "ref": "https://newsletter.example.com", "count": 1200 }
-  ]
-}`}</pre>
-              </div>
-            </section>
+  "activeVisitors": 7,
+  "pageviewsPerMinute": 3.5,
+  "eventsPerMinute": 5.2,
+  "topActivePages": [{ "key": "/", "count": 4 }],
+  "recentEvents": [{ "id": "evt_…", "name": "pageview", "path": "/", "country": "US", "timestamp": "…" }]
+}`} />
+          <P>
+            <C>window</C> defaults to 60 seconds. <C>recentEvents</C> returns the 20 most recent events with
+            country attached.
+          </P>
 
-            <section id="webhooks">
-              <h2 className="text-[20px] font-semibold tracking-tight text-white flex items-center gap-2"><span className="size-7 rounded-full bg-white text-zinc-900 grid place-items-center text-[14px] font-semibold">3</span> Webhooks</h2>
-              <p className="mt-3 text-[14px] leading-6 text-zinc-400">Subscribe to funnel drops, thresholds, anomalies. <code className="bg-white/[0.06] border border-white/[0.06] px-1.5 py-0.5 rounded text-zinc-300">POST /api/canopy/webhooks</code> (auth required).</p>
-
-              <h3 className="mt-4 mono text-[11px] tracking-widest text-zinc-500 uppercase">Event types</h3>
-              <div className="mt-3 grid sm:grid-cols-2 gap-3">
-                <div className="rounded-xl border border-white/[0.08] bg-[#0f0f12] p-4"><div className="mono text-[11px] text-emerald-400">funnel.drop</div><div className="mt-1 text-[13px] text-zinc-400">{'Funnel conversion drops > threshold'}</div></div>
-                <div className="rounded-xl border border-white/[0.08] bg-[#0f0f12] p-4"><div className="mono text-[11px] text-amber-300">threshold.breach</div><div className="mt-1 text-[13px] text-zinc-400">Metric exceeds configured limit</div></div>
-                <div className="rounded-xl border border-white/[0.08] bg-[#0f0f12] p-4"><div className="mono text-[11px] text-violet-400">anomaly.detected</div><div className="mt-1 text-[13px] text-zinc-400">Unusual traffic pattern detected</div></div>
-                <div className="rounded-xl border border-white/[0.08] bg-[#0f0f12] p-4"><div className="mono text-[11px] text-emerald-400">site.verified</div><div className="mt-1 text-[13px] text-zinc-400">Domain verified via DNS</div></div>
-              </div>
-
-              <h3 className="mt-4 mono text-[11px] tracking-widest text-zinc-500 uppercase">Payload</h3>
-              <div className="mt-2 rounded-xl overflow-hidden border border-[var(--border)] bg-[#08080a] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                <pre className="mono text-[12px] leading-5 p-4 text-zinc-300 overflow-x-auto">{`{
-  "event": "funnel.drop",
-  "site": "canopy_example_com",
-  "timestamp": "2024-01-15T14:32:00.000Z",
-  "data": {
-    "funnel": "checkout",
-    "steps": ["view", "cart", "checkout"],
-    "conversion": 0.021,
-    "previous": 0.033,
-    "drop": 0.36
-  }
-}`}</pre>
-              </div>
-            </section>
-
-            <section id="verify">
-              <h2 className="text-[20px] font-semibold tracking-tight text-white flex items-center gap-2"><span className="size-7 rounded-full bg-white text-zinc-900 grid place-items-center text-[14px] font-semibold">4</span> Site verification</h2>
-              <p className="mt-3 text-[14px] leading-6 text-zinc-400">Prove domain ownership via DNS TXT record. Unlocks <code className="bg-white/[0.06] border border-white/[0.06] px-1.5 py-0.5 rounded text-zinc-300">verified</code> badge and webhook trust.</p>
-
-              <div className="mt-4 rounded-xl border border-white/[0.08] bg-[#0f0f12] p-5">
-                <div className="mono text-[11px] tracking-widest text-zinc-500 uppercase">Verify endpoint</div>
-                <div className="mt-3 rounded-xl border border-[var(--border)] bg-[#08080a] p-3">
-                  <pre className="mono text-[12px] leading-5 text-zinc-300 overflow-x-auto">{`GET /api/verify?site=canopy_example_com
+          <Sub>Event log — GET /api/analytics/events</Sub>
+          <P>Paginated raw events for the range:</P>
+          <CodeWindow label="request + response" tone="muted" code={`GET /api/analytics/events?siteId=…&range=7d&eventName=signup&limit=100&offset=0
 
 {
-  "site": "canopy_example_com",
-  "status": "pending",
-  "record": "canopy-site=abc123xyz",
-  "instructions": "Add TXT record @ with value above"
-}`}</pre>
-                </div>
-                <p className="mt-3 mono text-[11px] text-zinc-500">After DNS propagates, re-check — status becomes <span className="text-emerald-400">verified</span> and badge appears on dashboard.</p>
-              </div>
-            </section>
+  "events": [{ "id": "evt_…", "name": "signup", "url": "…", "path": "/", "referrer": "…",
+               "title": "…", "viewportW": 1440, "props": { … }, "sessionId": "…",
+               "country": "US", "createdAt": "2026-10-17T09:14:22.410Z" }],
+  "total": 240, "limit": 100, "offset": 0
+}`} />
 
-            <section id="errors">
-              <h2 className="text-[20px] font-semibold tracking-tight text-white flex items-center gap-2"><span className="size-7 rounded-full bg-white text-zinc-900 grid place-items-center text-[14px] font-semibold">5</span> Errors</h2>
-              <div className="mt-3 overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead><tr className="border-b border-white/[0.08] text-zinc-500"><th className="p-3 mono">Code</th><th className="p-3">Meaning</th></tr></thead>
-                  <tbody className="divide-y divide-white/[0.04]">
-                    <tr><td className="p-3 mono">400</td><td className="p-3">Missing required field (<code>s</code> or <code>n</code>)</td></tr>
-                    <tr><td className="p-3 mono">404</td><td className="p-3">Unknown site ID</td></tr>
-                    <tr><td className="p-3 mono">422</td><td className="p-3">Invalid JSON or field validation failed</td></tr>
-                    <tr><td className="p-3 mono">429</td><td className="p-3">Rate limited (per-site, generous)</td></tr>
-                    <tr><td className="p-3 mono">500</td><td className="p-3">Internal error — check logs</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          </div>
+          <Sub>Export — GET /api/analytics/export</Sub>
+          <P>Download the same data as CSV or JSON, streamed as a file attachment:</P>
+          <CodeWindow label="request" tone="muted" code={`GET /api/analytics/export?siteId=canopy_example_com&range=7d&format=csv`} />
+          <P>
+            <C>format</C> is <C>csv</C> (default) or <C>json</C>. <C>limit</C> defaults to 10,000 rows and is
+            capped at 50,000. Files are named <C>{'canopy_<siteId>_<range>.csv'}</C>. Because the export
+            contains session IDs and property payloads, treat exported files with the same care as your database.
+          </P>
+        </Section>
 
-          <div className="mt-16 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[#161618] to-[#0a0a0c] p-8 md:p-10 text-center">
-            <h2 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.02em] text-white">Start sending events</h2>
-            <p className="mt-2 text-[14px] text-zinc-400">No API keys for ingestion. Just POST to your endpoint.</p>
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link href="/onboarding" className="rounded-full bg-white text-zinc-900 px-6 py-3 text-sm font-medium">Create your site</Link>
-              <Link href="/docs" className="rounded-full border border-white/[0.12] px-6 py-3 text-sm mono text-zinc-300 hover:bg-white/[0.06]">Back to docs</Link>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+        <Section n="3" id="sites" title="Manage sites">
+          <P>
+            Sites belong to workspaces. <C>GET /api/sites</C> returns the sites you can access (up to 50, newest
+            first) as a JSON array. To create one, POST the domain as form data — Canopy normalizes it, derives the
+            site ID, and attaches it to your active workspace:
+          </P>
+          <CodeWindow label="create site" tone="muted" code={`POST /api/sites
+Content-Type: application/x-www-form-urlencoded
+
+domain=example.com
+
+→ 200 { "id": "canopy_example_com", "domain": "example.com" }`} />
+          <P>
+            Domains must contain a dot; protocols, <C>www.</C>, and paths are stripped before the site ID is
+            derived. Invalid domains return <C>400</C>.
+          </P>
+        </Section>
+
+        <Section n="4" id="verify" title="Verify domain ownership">
+          <P>
+            Verification proves you control a domain via a DNS TXT record. Request a record, publish it, then ask
+            Canopy to check — verification happens through DNS-over-HTTPS, so no propagation-wait guessing games.
+          </P>
+          <CodeWindow label="get record" tone="muted" code={`GET /api/verify?site=canopy_example_com
+
+{ "status": "pending", "record": "canopy-site=9f2c…", "domain": "example.com" }`} />
+          <P>
+            Add a TXT record at your domain's apex with the returned <C>record</C> value, then trigger the check:
+          </P>
+          <CodeWindow label="check" tone="muted" code={`POST /api/verify?site=canopy_example_com
+
+→ { "status": "verified", "domain": "example.com" }
+→ { "status": "pending",  "record": "canopy-site=9f2c…", "domain": "example.com" }`} />
+          <P>
+            Once verified, the checkmark appears on the site in your dashboard. Requests for sites you don't have
+            access to return <C>404</C>, and unknown sites return a <C>not_found</C> status.
+          </P>
+        </Section>
+
+        <Section n="5" id="errors" title="Errors">
+          <P>Error responses are JSON with an <C>error</C> key. The codes you can encounter:</P>
+          <DataTable
+            columns={['Status', 'Meaning']}
+            firstColMono
+            rows={[
+              ['400', <>Malformed request — invalid JSON, failed validation, or missing <C>siteId</C>.</>],
+              ['401', 'No dashboard session on an analytics, sites, or verify route.'],
+              ['404', 'Unknown site ID on ingestion (production), or a site you have no access to.'],
+              ['500', 'Storage or query failure — check server logs.'],
+            ]}
+          />
+        </Section>
+      </div>
+
+      <CTA title="Start sending events" secondary={{ href: '/docs/events', label: 'Custom events guide' }}>
+        No API keys for ingestion. Just POST to your own endpoint.
+      </CTA>
+    </DocsShell>
   );
 }

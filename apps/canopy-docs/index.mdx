@@ -1,0 +1,40 @@
+---
+title: "Introduction"
+description: "Canopy — privacy-first, cookieless analytics you can self-host in minutes."
+---
+
+Canopy is a privacy-first analytics platform. Track pageviews, custom events, referrers, and countries without cookies, fingerprinting, or third-party requests.
+
+## How it works
+
+1. Add your site in the Canopy dashboard
+2. Paste one script tag (or install the Next.js SDK)
+3. Events post to your own domain and land in your own Postgres database
+4. View live visitors and trends in the dashboard
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Go from zero to live visitors in under five minutes.
+  </Card>
+  <Card title="Script tag install" icon="code" href="/installation/script-tag">
+    One `<script>` tag — works on any site or framework.
+  </Card>
+  <Card title="Next.js SDK" icon="cube" href="/installation/nextjs">
+    React provider with hooks and SSR support.
+  </Card>
+  <Card title="HTTP ingestion API" icon="paper-plane" href="/tracking/http-api">
+    Send events directly from your server or backend.
+  </Card>
+</CardGroup>
+
+## Privacy by default
+
+- **No cookies** — sessions are tracked with a random `sessionId` only
+- **No fingerprinting** — no localStorage, no device fingerprints
+- **DNT aware** — respects the browser Do Not Track signal by default
+- **IP hashing** — raw IPs are never stored, only salted hashes
+- **First-party** — events post to your own domain, not a third-party tracker
+
+<Tip>
+Canopy is GDPR-friendly out of the box. See [Privacy & compliance](/guides/privacy) for details.
+</Tip>

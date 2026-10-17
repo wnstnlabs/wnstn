@@ -1,17 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { formatNumber, formatRelativeTime, cn } from '@/lib/utils';
+import { formatNumber } from '@/lib/utils';
 import { exportAnalytics } from '@/lib/utils/export';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { PieChartComponent, BarChartComponent } from '@/components/charts/Charts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { BarChartComponent, PieChartComponent } from '@/components/charts/Charts';
-import { Globe, MousePointer, Link, Search, Download } from 'lucide-react';
+import { Download, Search, Link as LinkIcon, Globe } from 'lucide-react';
+import { PANEL, PanelHeader } from '@/components/dashboard/parts';
 
 interface TopReferrersData {
   data: Array<{ key: string; count: number; percentage: number }>;
@@ -34,7 +32,6 @@ export function DashboardSources({ siteId }: { siteId: string }) {
   const [countriesData, setCountriesData] = useState<TopCountriesData | null>(null);
   const [sourcesData, setSourcesData] = useState<TopSourcesData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'referrers' | 'countries' | 'sources'>('referrers');
   const [search, setSearch] = useState('');
 
   const fetchData = async () => {
@@ -66,32 +63,27 @@ export function DashboardSources({ siteId }: { siteId: string }) {
 
   if (loading && !referrersData) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-white">Sources</h1>
-          <p className="text-zinc-500 mt-1">Loading traffic sources...</p>
+      <div className="px-3 md:px-4 max-w-[1200px] w-full mx-auto py-6 space-y-4">
+        <div className="h-12 w-48 bg-white/[0.05] rounded" />
+        <div className="grid gap-4 xl:grid-cols-2">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-72 rounded-xl border border-white/[0.08] bg-[#12151d] animate-pulse" />
+          ))}
         </div>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="h-64 animate-pulse bg-white/[0.02] rounded-xl" />
-          </CardContent>
-        </Card>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="px-3 md:px-4 max-w-[1200px] w-full mx-auto py-6 space-y-4">
+      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Sources</h1>
-          <p className="text-zinc-500 mt-1">
-            Where your visitors come from
-          </p>
+          <p className="mono text-[10px] uppercase tracking-[0.16em] text-rose-400 font-medium">Sources</p>
+          <h1 className="mt-1 text-[22px] font-semibold tracking-[-0.02em] text-slate-100">Where visitors come from</h1>
         </div>
         <div className="flex items-center gap-2">
           <Select value={range} onValueChange={setRange}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[160px] h-9">
               <SelectValue placeholder="Select range" />
             </SelectTrigger>
             <SelectContent>
@@ -103,239 +95,150 @@ export function DashboardSources({ siteId }: { siteId: string }) {
             </SelectContent>
           </Select>
           <Button variant="outline" size="sm" onClick={() => exportAnalytics({ siteId, range, format: 'csv' })}>
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4" />
             Export
           </Button>
         </div>
-      </div>
+      </header>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="referrers">
-            <Link className="h-4 w-4 mr-2" />
-            Referrers ({formatNumber(referrersData?.total || 0)})
-          </TabsTrigger>
-          <TabsTrigger value="countries">
-            <Globe className="h-4 w-4 mr-2" />
-            Countries ({formatNumber(countriesData?.total || 0)})
-          </TabsTrigger>
-          <TabsTrigger value="sources">
-            <MousePointer className="h-4 w-4 mr-2" />
-            Pages ({formatNumber(sourcesData?.total || 0)})
-          </TabsTrigger>
-        </TabsList>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <div className={PANEL}>
+          <PanelHeader
+            title="Referrer Distribution"
+            right={<span className="mono text-[10px] text-slate-600 tabular">{formatNumber(referrersData?.total || 0)}</span>}
+          />
+          <div className="p-4">
+            <PieChartComponent data={referrers} height={280} maxSlices={8} />
+          </div>
+        </div>
 
-        <TabsContent value="referrers">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Referrer Distribution</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PieChartComponent
-                  data={referrers}
-                  height={300}
-                  maxSlices={8}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">All Referrers</CardTitle>
+        <div className={PANEL}>
+          <PanelHeader
+            title="All Referrers"
+            right={
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-600" />
                 <Input
                   placeholder="Search referrers..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-64"
+                  className="w-48 h-8 pl-8 text-xs"
                 />
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-8">#</TableHead>
-                        <TableHead>Referrer</TableHead>
-                        <TableHead className="text-right w-32">Visits</TableHead>
-                        <TableHead className="text-right w-32">Share</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {referrers
-                        .filter((r) => r.key.toLowerCase().includes(search.toLowerCase()))
-                        .map((item, index) => (
-                          <TableRow key={item.key}>
-                            <TableCell className="text-zinc-500 mono text-sm">{index + 1}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Link className="h-4 w-4 text-zinc-500" />
-                                <span className="font-mono text-sm truncate max-w-[300px] text-white">
-                                  {item.key === 'Direct' ? 'Direct' : item.key}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right font-mono mono text-sm">
-                              {formatNumber(item.count)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Badge variant="secondary">{item.percentage.toFixed(1)}%</Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      {referrers.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-zinc-500">
-                            No referrer data available
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="countries">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Geographic Distribution</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PieChartComponent
-                  data={countries}
-                  height={300}
-                  maxSlices={10}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">All Countries</CardTitle>
-                <Input
-                  placeholder="Search countries..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-64"
-                />
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-8">#</TableHead>
-                        <TableHead>Country</TableHead>
-                        <TableHead className="text-right w-32">Visits</TableHead>
-                        <TableHead className="text-right w-32">Share</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {countries
-                        .filter((c) => c.key.toLowerCase().includes(search.toLowerCase()))
-                        .map((item, index) => (
-                          <TableRow key={item.key}>
-                            <TableCell className="text-zinc-500 mono text-sm">{index + 1}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Globe className="h-4 w-4 text-zinc-500" />
-                                <span className="font-medium text-white">{item.key}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right font-mono mono text-sm">
-                              {formatNumber(item.count)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Badge variant="secondary">{item.percentage.toFixed(1)}%</Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      {countries.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-zinc-500">
-                            No country data available
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="sources">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Landing Pages as Entry Points</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <BarChartComponent
-                data={sources}
-                height={350}
-                maxBars={15}
-                horizontal={true}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <CardTitle className="text-lg">All Entry Pages</CardTitle>
-              <Input
-                placeholder="Search pages..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-64"
-              />
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-8">#</TableHead>
-                      <TableHead>Entry Page</TableHead>
-                      <TableHead className="text-right w-32">Entrances</TableHead>
-                      <TableHead className="text-right w-32">Share</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sources
-                      .filter((s) => s.key.toLowerCase().includes(search.toLowerCase()))
-                      .map((item, index) => (
-                        <TableRow key={item.key}>
-                          <TableCell className="text-zinc-500 mono text-sm">{index + 1}</TableCell>
-                          <TableCell className="font-mono text-sm truncate max-w-[400px] text-white">
-                            {item.key}
-                          </TableCell>
-                          <TableCell className="text-right font-mono mono text-sm">
-                            {formatNumber(item.count)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Badge variant="secondary">{item.percentage.toFixed(1)}%</Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    {sources.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-8 text-zinc-500">
-                          No landing page data available
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            }
+          />
+          <div className="p-2 max-h-[340px] overflow-y-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-8">#</TableHead>
+                  <TableHead>Referrer</TableHead>
+                  <TableHead className="text-right w-20">Visits</TableHead>
+                  <TableHead className="text-right w-20">Share</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {referrers
+                  .filter((r) => r.key.toLowerCase().includes(search.toLowerCase()))
+                  .map((item, index) => (
+                    <TableRow key={item.key}>
+                      <TableCell className="mono text-[11px] text-slate-600">{index + 1}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <LinkIcon className="h-3.5 w-3.5 text-slate-600" />
+                          <span className="mono text-[12.5px] truncate max-w-[260px] text-slate-100">
+                            {item.key}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right mono text-[12.5px] tabular text-slate-300">
+                        {formatNumber(item.count)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className="mono text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-md px-1.5 py-0.5 tabular">
+                          {item.percentage.toFixed(1)}%
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                {referrers.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-10 text-[13px] text-slate-600">
+                      No referrer data available
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+
+        <div className={PANEL}>
+          <PanelHeader
+            title="Geographic Distribution"
+            right={<span className="mono text-[10px] text-slate-600 tabular">{formatNumber(countriesData?.total || 0)}</span>}
+          />
+          <div className="p-4">
+            <PieChartComponent data={countries} height={280} maxSlices={10} />
+          </div>
+        </div>
+
+        <div className={PANEL}>
+          <PanelHeader title="All Countries" />
+          <div className="p-2 max-h-[340px] overflow-y-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-8">#</TableHead>
+                  <TableHead>Country</TableHead>
+                  <TableHead className="text-right w-20">Visits</TableHead>
+                  <TableHead className="text-right w-20">Share</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {countries
+                  .filter((c) => c.key.toLowerCase().includes(search.toLowerCase()))
+                  .map((item, index) => (
+                    <TableRow key={item.key}>
+                      <TableCell className="mono text-[11px] text-slate-600">{index + 1}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Globe className="h-3.5 w-3.5 text-slate-600" />
+                          <span className="text-[13px] font-medium text-slate-100">{item.key}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right mono text-[12.5px] tabular text-slate-300">
+                        {formatNumber(item.count)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className="mono text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-md px-1.5 py-0.5 tabular">
+                          {item.percentage.toFixed(1)}%
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                {countries.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-10 text-[13px] text-slate-600">
+                      No country data available
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </div>
+
+      <div className={PANEL}>
+        <PanelHeader
+          title="Landing Pages · Entry Points"
+          right={<span className="mono text-[10px] text-slate-600 tabular">{formatNumber(sourcesData?.total || 0)}</span>}
+        />
+        <div className="p-4">
+          <BarChartComponent data={sources} height={300} maxBars={12} horizontal={true} />
+        </div>
+      </div>
     </div>
   );
 }

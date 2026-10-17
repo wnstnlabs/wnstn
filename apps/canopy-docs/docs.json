@@ -1,0 +1,85 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "linden",
+  "name": "Canopy",
+  "colors": {
+    "primary": "#fb7185",
+    "light": "#fda4af",
+    "dark": "#f43f5e"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "anchors": [
+      {
+        "anchor": "Dashboard",
+        "href": "http://localhost:3002/dashboard",
+        "icon": "gauge-high"
+      }
+    ],
+    "groups": [
+      {
+        "group": "Getting started",
+        "pages": [
+          "index",
+          "quickstart",
+          "installation/script-tag",
+          "installation/nextjs"
+        ]
+      },
+      {
+        "group": "SDKs",
+        "pages": [
+          "tracking/sdk-core",
+          "tracking/sdk-nextjs"
+        ]
+      },
+      {
+        "group": "Tracking",
+        "pages": [
+          "tracking/http-api"
+        ]
+      },
+      {
+        "group": "Analytics API",
+        "pages": [
+          "api/analytics"
+        ]
+      },
+      {
+        "group": "Guides",
+        "pages": [
+          "guides/privacy",
+          "guides/self-hosting"
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "type": "github",
+        "href": "https://github.com/winston/wnstn"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "http://localhost:3002/dashboard"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "cursor",
+      "vscode"
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/winston/wnstn"
+    }
+  }
+}

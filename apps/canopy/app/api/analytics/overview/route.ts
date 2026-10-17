@@ -4,10 +4,11 @@ import { auth } from '@/lib/auth';
 import { Effect } from 'effect';
 import { CanopyRuntime } from '@/lib/effect/runtime';
 import { Db } from '@/lib/effect/db';
-import { event, site, member, organization, user as userTable } from '@/db/schema';
-import { eq, sql, desc, and, gte, inArray, isNotNull, ne, ilike } from 'drizzle-orm';
+import { event } from '@/db/schema';
+import { getUserSites } from '@/lib/api/access';
+import { formatBucket } from '@/lib/utils';
+import { eq, sql, desc, and, gte, isNotNull, ne, ilike } from 'drizzle-orm';
 import { AnalyticsQuerySchema } from '@/types/analytics';
-import { formatRelativeTime } from '@/lib/utils';
 
 function getRangeInterval(range: string): { start: Date; interval: 'minute' | 'hour' | 'day' } {
   const now = new Date();
@@ -25,49 +26,6 @@ function getRangeInterval(range: string): { start: Date; interval: 'minute' | 'h
     default:
       return { start: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), interval: 'hour' };
   }
-}
-
-function formatTimeBucket(date: Date, interval: 'minute' | 'hour' | 'day'): string {
-  if (interval === 'minute') {
-    return date.toISOString().slice(0, 16) + ':00';
-  }
-  if (interval === 'hour') {
-    return date.toISOString().slice(0, 13) + ':00:00';
-  }
-  return date.toISOString().slice(0, 10);
-}
-
-async function getUserSites(db: any, userId: string, activeOrgId: string | null) {
-  const myMembers = await db.select().from(member).where(eq(member.userId, userId));
-  const orgIds = myMembers.map((m: any) => m.organizationId);
-  console.log('DEBUG getUserSites input:', { userId, activeOrgId, orgIds });
-  
-  const userEmails = await db.select({ email: userTable.email }).from(userTable).where(eq(userTable.id, userId)).limit(1);
-  const userEmail = userEmails[0]?.email;
-  console.log('DEBUG userEmail:', userEmail);
-  
-  let sameEmailUserIds: string[] = [];
-  if (userEmail) {
-    const sameEmailUsers = await db.select({ id: userTable.id }).from(userTable).where(eq(userTable.email, userEmail));
-    sameEmailUserIds = sameEmailUsers.map((u: any) => u.id);
-  }
-  console.log('DEBUG sameEmailUserIds:', sameEmailUserIds);
-  
-  let sitesQuery = db.select().from(site);
-  
-  if (orgIds.length > 0) {
-    sitesQuery = sitesQuery.where(
-      sql`${site.organizationId} IN (${orgIds.join(',')}) OR ${site.createdById} IN (SELECT id FROM "user" WHERE email = ${userEmail})`
-    );
-  } else {
-    sitesQuery = sitesQuery.where(
-      sql`${site.createdById} IN (SELECT id FROM "user" WHERE email = ${userEmail})`
-    );
-  }
-  
-  const sites = await sitesQuery.orderBy(desc(site.createdAt)).limit(50);
-  console.log('DEBUG sites found:', sites.map((s: any) => ({ id: s.id, domain: s.domain, createdById: s.createdById, organizationId: s.organizationId })));
-  return sites;
 }
 
 export async function GET(request: Request) {
@@ -101,7 +59,7 @@ export async function GET(request: Request) {
     
     // Verify user has access to this site
     const sites = yield* Effect.tryPromise({
-      try: () => getUserSites(db, session.user.id, activeOrgId),
+      try: () => getUserSites(db, session.user.id),
       catch: () => [] as any,
     });
     
@@ -159,12 +117,10 @@ export async function GET(request: Request) {
       try: () => db.select({ count: sql<number>`count(DISTINCT ${event.sessionId})::int` }).from(event).where(and(...conditions, eq(event.name, 'pageview'))),
       catch: () => [{ count: 0 }],
     });
-    console.log('Total sessions result:', totalSessionsRows);
     const totalSessions = totalSessionsRows[0]?.count ?? 0;
     const bounceRate = totalSessions > 0 ? (bounceSessions / totalSessions) * 100 : 0;
 
     // Avg session duration (approximate - time between first and last event in session)
-    console.log('Querying session duration...');
     const sessionDurationRows = yield* Effect.tryPromise({
       try: () => db
         .select({
@@ -245,7 +201,7 @@ export async function GET(request: Request) {
     const timeSeries = timeSeriesRows.map((row: any) => ({
       timestamp: row.bucket,
       value: row.count,
-      label: formatTimeBucket(new Date(row.bucket), interval),
+      label: formatBucket(new Date(row.bucket), interval),
     }));
 
     return {

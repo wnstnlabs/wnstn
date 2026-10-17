@@ -38,7 +38,7 @@ export default function SignupPage() {
 ></script>`}</pre>
               <div className="mt-3 rounded-lg bg-white/[0.04] border border-white/[0.06] px-3 py-2 flex items-center justify-between">
                 <span className="text-zinc-500">Next.js</span>
-                <span className="text-white">npm i @wnstn/canopy/nextjs</span>
+                <span className="text-white">npm i @wnstn/canopy-nextjs</span>
               </div>
             </div>
           </div>

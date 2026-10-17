@@ -10,7 +10,7 @@ wnstn/
 │   └── canopy/          # Analytics platform — Next.js + better-auth
 ├── packages/
 │   ├── canopy/          # @wnstn/canopy — < 2kb privacy-first script
-│   │   └── nextjs       # @wnstn/canopy/nextjs — Next.js wrapper
+│   ├── canopy-nextjs/   # @wnstn/canopy-nextjs — Next.js wrapper (standalone package)
 │   ├── ui/              # Shared UI primitives
 │   ├── eslint-config/   # Shared ESLint config
 │   └── typescript-config/ # Shared TS config
@@ -22,7 +22,7 @@ wnstn/
 
 - **Marketing + Dashboard** in `apps/canopy`
 - **Script** in `packages/canopy` — ships as `https://canopy.[domain]/p.js` and via npm `import { canopy } from '@wnstn/canopy'`
-- **Next.js** via `import { CanopyProvider } from '@wnstn/canopy/nextjs'`
+- **Next.js** via `import { CanopyProvider } from '@wnstn/canopy-nextjs'`
 - **Auth**: Next.js + `better-auth` standalone. Winston SSO is **optional** via OIDC (genericOAuth). Self-hosting Canopy does NOT require Winston.
 
 > See `apps/canopy/README.md` for SSO wiring.
@@ -47,5 +47,5 @@ Neither app breaks if the other is absent. See `apps/canopy/lib/auth/winston.ts`
 ## Packages
 
 - `@wnstn/canopy` — safe, tiny, cookieless-by-default tracker (core, framework-agnostic)
-- `@wnstn/canopy/nextjs` — Next.js/React bindings (subpath export, no extra install)
+- `@wnstn/canopy-nextjs` — Next.js/React bindings (standalone package)
 - `@wnstn/ui` — shared components

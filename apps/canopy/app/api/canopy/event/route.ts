@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Effect } from 'effect';
 import { z } from 'zod';
 import crypto from 'crypto';
-import { db } from '@/lib/db';
 import { site, event } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { CanopyRuntime } from '@/lib/effect/runtime';

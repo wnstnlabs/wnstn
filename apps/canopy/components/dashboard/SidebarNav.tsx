@@ -17,20 +17,33 @@ export function SidebarNav({ liveCount }: { liveCount?: number }) {
   const searchParams = useSearchParams();
 
   return (
-    <nav className="mt-2.5 space-y-1">
+    <nav className="space-y-px">
       {items.map((item) => {
         const isActive = pathname === item.href;
         return (
           <Link
             key={item.href}
             href={item.href + (searchParams.get('site') ? `?site=${encodeURIComponent(searchParams.get('site')!)}` : '')}
-            className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13.5px] leading-none transition ${isActive ? 'bg-white text-zinc-900 font-[550] shadow-[0_1px_2px_rgba(0,0,0,0.12)]' : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05]'}`}
+            className={`relative flex items-center gap-3 px-4 py-2.5 text-[13px] leading-none transition ${
+              isActive
+                ? 'text-rose-300 font-medium bg-rose-500/[0.07]'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
+            }`}
           >
-            <span className={`w-4 text-center mono text-[12px] leading-none ${isActive ? 'text-zinc-900' : ''}`}>{isActive && item.label === 'Overview' ? '●' : item.icon}</span>
+            {isActive && (
+              <span className="absolute left-0 top-0 h-full w-[2px] bg-rose-500" />
+            )}
+            <span className={`w-4 text-center mono text-[12px] leading-none ${isActive ? 'text-rose-400' : 'text-slate-600'}`}>
+              {isActive && item.label === 'Overview' ? '●' : item.icon}
+            </span>
             {item.label}
             {item.label === 'Realtime' && liveCount !== undefined && liveCount > 0 && (
-              <span className={`ml-auto flex items-center gap-1 mono text-[11px] font-medium ${isActive ? 'text-zinc-900' : 'text-emerald-400'}`}>
-                <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" /> {liveCount}
+              <span
+                className={`ml-auto flex items-center gap-1.5 mono text-[10px] font-medium tabular ${
+                  isActive ? 'text-rose-300' : 'text-teal-400'
+                }`}
+              >
+                <span className="size-1.5 rounded-full bg-teal-400 animate-pulse" /> {liveCount}
               </span>
             )}
           </Link>

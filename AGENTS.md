@@ -3,7 +3,7 @@
 Canopy is a privacy-first, cookieless analytics platform. It's a monorepo containing:
 
 1. **`@wnstn/canopy`** — Core analytics tracker (vanilla JS, <2kb, works everywhere)
-2. **`@wnstn/canopy/nextjs`** — React/Next.js wrapper with hooks and SSR support
+2. **`@wnstn/canopy-nextjs`** — React/Next.js wrapper with hooks and SSR support
 3. **Canopy Dashboard** — Next.js production dashboard for viewing analytics
 4. **Canopy Docs** — Documentation for implementation, API, and SDK
 
@@ -18,9 +18,9 @@ wnstn/
 │       ├── lib/                 # Utilities, auth, db, Effect runtime
 │       └── AGENTS.md            # Detailed app architecture
 ├── packages/
-│   ├── canopy/                  # Core tracker library
+│   ├── canopy/                  # Core tracker library (vanilla JS, <2kb, works everywhere)
 │   │   └── src/                 # Tracker, types, tests
-│   ├── canopy/nextjs/           # React/Next.js wrapper
+│   ├── canopy-nextjs/           # @wnstn/canopy-nextjs — React/Next.js wrapper (standalone package)
 │   │   └── src/                 # Provider, hooks
 │   ├── typescript-config/       # Shared tsconfig
 │   ├── eslint-config/           # Shared ESLint config

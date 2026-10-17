@@ -15,11 +15,10 @@ packages/
 │   ├── vite.config.ts       # Vite build config
 │   └── tsup.config...      # Alternate tsup config
 │
-└── canopy/nextjs/    # React/Next.js wrapper
+└── canopy-nextjs/   # @wnstn/canopy-nextjs — React/Next.js wrapper (standalone package)
     ├── src/
     │   └── index.tsx        # CanopyProvider, useCanopy, useCanopyTrack, useCanopyIdentify, etc.
-    ├── vite.config.ts
-    └── ...
+    └── vite.config.ts
 ```
 
 ## SDK Philosophy (from the Article)
@@ -53,14 +52,14 @@ try { ... } catch (e) {
 }
 ```
 
-### Next.js (`@wnstn/canopy/nextjs`)
+### Next.js (`@wnstn/canopy-nextjs`)
 
 ```tsx
 import {
   CanopyProvider, CanopyScript,
   useCanopy, useCanopyInstance, useCanopyTrack, useCanopyPageview,
   useCanopyIdentify, useCanopyReset, useCanopyInitialized
-} from '@wnstn/canopy/nextjs'
+} from '@wnstn/canopy-nextjs'
 
 // Layout — required once
 <CanopyProvider siteId="abc" debug={process.env.NODE_ENV === 'development'} />
@@ -118,7 +117,7 @@ getSessionIdPublic()                                       // current session ID
 
 ```bash
 pnpm --filter @wnstn/canopy build         # ESM + CJS
-pnpm --filter @wnstn/canopy/nextjs build  # ESM + CJS
+pnpm --filter @wnstn/canopy-nextjs build  # ESM + CJS
 pnpm --filter @wnstn/canopy test         # Vitest
 ```
 

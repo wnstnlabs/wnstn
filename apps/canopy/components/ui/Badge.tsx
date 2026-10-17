@@ -9,18 +9,18 @@ interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 const badgeVariants = {
-  default: 'bg-white/10 text-white',
-  secondary: 'bg-white/[0.05] text-zinc-400',
-  destructive: 'bg-red-500/20 text-red-400 border border-red-500/20',
-  outline: 'border border-white/10 bg-transparent',
-  success: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20',
-  warning: 'bg-amber-500/20 text-amber-400 border border-amber-500/20',
+  default: 'bg-rose-500/15 text-rose-300 border border-rose-500/20',
+  secondary: 'bg-white/[0.06] text-slate-400 border border-white/[0.06]',
+  destructive: 'bg-red-500/15 text-red-400 border border-red-500/25',
+  outline: 'border border-white/10 bg-transparent text-slate-300',
+  success: 'bg-teal-500/15 text-teal-400 border border-teal-500/25',
+  warning: 'bg-amber-500/15 text-amber-400 border border-amber-500/25',
 };
 
 const sizeVariants = {
-  default: 'px-2.5 py-0.5 text-xs',
-  sm: 'px-2 py-0.5 text-[10px]',
-  lg: 'px-3 py-1 text-sm',
+  default: 'px-2 py-0.5 text-[11px]',
+  sm: 'px-1.5 py-0.5 text-[10px]',
+  lg: 'px-2.5 py-1 text-xs',
 };
 
 const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
@@ -29,7 +29,7 @@ const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
       <span
         ref={ref}
         className={cn(
-          'inline-flex items-center rounded-full font-medium',
+          'inline-flex items-center rounded-md font-medium mono tracking-tight',
           badgeVariants[variant],
           sizeVariants[size],
           className

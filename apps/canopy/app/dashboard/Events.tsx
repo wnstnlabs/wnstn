@@ -2,16 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { formatNumber, formatRelativeTime, cn } from '@/lib/utils';
+import { formatNumber, formatRelativeTime } from '@/lib/utils';
 import { exportAnalytics } from '@/lib/utils/export';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { Download, Search, Filter } from 'lucide-react';
+import { Download, Search } from 'lucide-react';
+import { PANEL, PanelHeader, StatCell } from '@/components/dashboard/parts';
 
 interface PaginatedEventsData {
   events: Array<{
@@ -69,38 +67,30 @@ export function DashboardEvents({ siteId }: { siteId: string }) {
 
   const events = eventsData?.events || [];
   const total = eventsData?.total || 0;
+  const pageviews = events.filter((e) => e.name === 'pageview').length;
 
   if (loading && !eventsData) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-white">Events</h1>
-          <p className="text-zinc-500 mt-1">Loading events...</p>
-        </div>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="h-64 animate-pulse bg-white/[0.02] rounded-xl" />
-          </CardContent>
-        </Card>
+      <div className="px-3 md:px-4 max-w-[1200px] w-full mx-auto py-6 space-y-4">
+        <div className="h-12 w-48 bg-white/[0.05] rounded" />
+        <div className="h-[68px] rounded-xl border border-white/[0.08] bg-[#12151d] animate-pulse" />
+        <div className="h-[420px] rounded-xl border border-white/[0.08] bg-[#12151d] animate-pulse" />
       </div>
     );
   }
 
-  // Get unique event names for filter
-  const uniqueEvents = [...new Set(events.map(e => e.name))].sort();
+  const uniqueEvents = [...new Set(events.map((e) => e.name))].sort();
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="px-3 md:px-4 max-w-[1200px] w-full mx-auto py-6 space-y-4">
+      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Events</h1>
-          <p className="text-zinc-500 mt-1">
-            Browse and filter all tracked events
-          </p>
+          <p className="mono text-[10px] uppercase tracking-[0.16em] text-rose-400 font-medium">Events</p>
+          <h1 className="mt-1 text-[22px] font-semibold tracking-[-0.02em] text-slate-100">Browse & filter</h1>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Select value={range} onValueChange={setRange}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[140px] h-9">
               <SelectValue placeholder="Select range" />
             </SelectTrigger>
             <SelectContent>
@@ -112,7 +102,7 @@ export function DashboardEvents({ siteId }: { siteId: string }) {
             </SelectContent>
           </Select>
           <Select value={eventName} onValueChange={setEventName}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-[180px] h-9">
               <SelectValue placeholder="Filter by event type" />
             </SelectTrigger>
             <SelectContent>
@@ -123,100 +113,110 @@ export function DashboardEvents({ siteId }: { siteId: string }) {
             </SelectContent>
           </Select>
           <Button variant="outline" size="sm" onClick={() => exportAnalytics({ siteId, range, format: 'csv', eventName: eventName || undefined })}>
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4" />
             Export
           </Button>
         </div>
+      </header>
+
+      <div className={`${PANEL} grid grid-cols-3 divide-x divide-white/[0.06]`}>
+        <StatCell label="Total Events" value={formatNumber(total)} />
+        <StatCell label="Pageviews (loaded)" value={formatNumber(pageviews)} />
+        <StatCell label="Other Types (loaded)" value={formatNumber(Math.max(events.length - pageviews, 0))} />
       </div>
 
-      <Card>
-        <CardHeader className="pb-3 flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">
-            Event Log ({formatNumber(total)})
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <Input
-              placeholder="Search events..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-64"
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">Time</TableHead>
-                  <TableHead>Event</TableHead>
-                  <TableHead>Path</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Session</TableHead>
-                  <TableHead className="w-32">Country</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {events
-                  .filter((e) =>
-                    e.name.toLowerCase().includes(search.toLowerCase()) ||
-                    e.path.toLowerCase().includes(search.toLowerCase()) ||
-                    e.title?.toLowerCase().includes(search.toLowerCase()) ||
-                    e.sessionId.toLowerCase().includes(search.toLowerCase())
-                  )
-                  .map((event) => (
-                    <TableRow key={event.id}>
-                      <TableCell className="text-zinc-500 mono text-xs">
-                        {formatRelativeTime(event.createdAt)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={event.name === 'pageview' ? 'default' : 'secondary'}>
-                          {event.name}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-mono text-sm truncate max-w-[250px]">
-                        {event.path || '/'}
-                      </TableCell>
-                      <TableCell className="truncate max-w-[200px] text-zinc-400">
-                        {event.title || '—'}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-zinc-500">
-                        {event.sessionId.slice(0, 12)}…
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{event.country || 'Unknown'}</Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                {events.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-zinc-500">
-                      No events found matching your criteria
+      <div className={PANEL}>
+        <PanelHeader
+          title={`Event Log · ${formatNumber(total)}`}
+          right={
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-600" />
+              <Input
+                placeholder="Search events..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-56 h-8 pl-8 text-xs"
+              />
+            </div>
+          }
+        />
+        <div className="p-2">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-24">Time</TableHead>
+                <TableHead>Event</TableHead>
+                <TableHead>Path</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Session</TableHead>
+                <TableHead className="w-24">Country</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {events
+                .filter((e) =>
+                  e.name.toLowerCase().includes(search.toLowerCase()) ||
+                  e.path.toLowerCase().includes(search.toLowerCase()) ||
+                  e.title?.toLowerCase().includes(search.toLowerCase()) ||
+                  e.sessionId.toLowerCase().includes(search.toLowerCase())
+                )
+                .map((event) => (
+                  <TableRow key={event.id}>
+                    <TableCell className="mono text-[11px] text-slate-500">
+                      {formatRelativeTime(event.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      <span className={`mono text-[11px] rounded-md px-1.5 py-0.5 border ${
+                        event.name === 'pageview'
+                          ? 'bg-rose-500/10 text-rose-300 border-rose-500/20'
+                          : 'bg-white/[0.05] text-slate-400 border-white/[0.06]'
+                      }`}>
+                        {event.name}
+                      </span>
+                    </TableCell>
+                    <TableCell className="mono text-[12.5px] truncate max-w-[220px] text-slate-100">
+                      {event.path || '/'}
+                    </TableCell>
+                    <TableCell className="text-[12.5px] truncate max-w-[180px] text-slate-400">
+                      {event.title || '—'}
+                    </TableCell>
+                    <TableCell className="mono text-[11px] text-slate-600">
+                      {event.sessionId.slice(0, 10)}…
+                    </TableCell>
+                    <TableCell>
+                      <span className="mono text-[11px] text-slate-400 bg-white/[0.05] border border-white/[0.06] rounded-md px-1.5 py-0.5">
+                        {event.country || '??'}
+                      </span>
                     </TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                ))}
+              {events.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-10 text-[13px] text-slate-600">
+                    No events found matching your criteria
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
-          {/* Pagination */}
-          {total > 100 && (
-            <div className="mt-4 flex items-center justify-between">
-              <p className="text-sm text-zinc-500">
-                Showing {Math.min(page * 100, total)} of {formatNumber(total)} events
-              </p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
-                  Previous
-                </Button>
-                <Button variant="outline" size="sm" disabled={page * 100 >= total} onClick={() => setPage(p => p + 1)}>
-                  Next
-                </Button>
-              </div>
+        {total > 100 && (
+          <div className="px-4 py-3 border-t border-white/[0.06] flex items-center justify-between">
+            <p className="text-xs text-slate-500 mono">
+              Showing {Math.min(page * 100, total)} of {formatNumber(total)}
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
+                Previous
+              </Button>
+              <Button variant="outline" size="sm" disabled={page * 100 >= total} onClick={() => setPage(p => p + 1)}>
+                Next
+              </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

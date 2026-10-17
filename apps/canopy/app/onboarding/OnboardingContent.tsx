@@ -101,7 +101,7 @@ export function OnboardingContent({
           <div>
             <div className="flex items-center gap-2 mono text-[11px] tracking-widest text-zinc-500 uppercase">
               <span className="size-5 rounded-full bg-white text-zinc-900 grid place-items-center text-[10px] font-medium">2</span>
-              Next.js — <code className="bg-white/[0.06] border border-white/[0.06] px-1 py-0.5 rounded text-zinc-300">@wnstn/canopy/nextjs</code>
+              Next.js — <code className="bg-white/[0.06] border border-white/[0.06] px-1 py-0.5 rounded text-zinc-300">@wnstn/canopy-nextjs</code>
             </div>
             <div className="mt-3 rounded-xl border border-[var(--border)] bg-white/[0.02] p-4 overflow-x-auto">
               <pre className="mono text-[12px] leading-5 text-zinc-300">{npmSnippet}</pre>
@@ -189,7 +189,7 @@ export function OnboardingContent({
                   </div>
                   <div className="space-y-1">
                     <span className="mono text-[10px] text-zinc-500">Target</span>
-                    <code className="mono text-sm bg-black/30 rounded px-3 py-2 block break-all">cname.canopy.wnstn.io</code>
+                    <code className="mono text-sm bg-black/30 rounded px-3 py-2 block break-all">cname.cano-py.wnstn.space</code>
                   </div>
                   <div className="space-y-1">
                     <span className="mono text-[10px] text-zinc-500">TTL</span>

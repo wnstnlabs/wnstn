@@ -12,18 +12,17 @@ export default async function SettingsRoutePage({ searchParams }: { searchParams
   const { site: siteIdParam } = await searchParams;
   const resolved = await resolveSites(siteIdParam);
   if (!resolved) {
-    return <div className="p-8 text-sm text-zinc-500">Session required. <a href="/login" className="underline">Sign in</a></div>;
+    return <div className="p-8 text-sm text-slate-500">Session required. <a href="/login" className="underline">Sign in</a></div>;
   }
   const { sites, current } = resolved;
 
   if (sites.length === 0) {
-    return <div className="px-7 py-8 text-sm text-zinc-500">No sites yet — create one from the dashboard.</div>;
+    return <div className="px-7 py-8 text-sm text-slate-500">No sites yet — create one from the dashboard.</div>;
   }
   if (!current) {
-    return <div className="p-7 text-sm text-zinc-500">Select a site.</div>;
+    return <div className="p-7 text-sm text-slate-500">Select a site.</div>;
   }
 
-  // Fetch full site record (includes verification fields) + team members
   const program = Effect.gen(function* () {
     const db = yield* Db;
 

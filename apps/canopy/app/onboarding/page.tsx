@@ -14,7 +14,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   async
 ></script>`;
 
-  const npmSnippet = `import { CanopyProvider } from "@wnstn/canopy/nextjs";
+  const npmSnippet = `import { CanopyProvider } from "@wnstn/canopy-nextjs";
 
 export default function RootLayout({ children }) {
   return (

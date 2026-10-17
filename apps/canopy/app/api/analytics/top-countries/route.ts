@@ -3,7 +3,8 @@ import { auth } from '@/lib/auth';
 import { Effect } from 'effect';
 import { CanopyRuntime } from '@/lib/effect/runtime';
 import { Db } from '@/lib/effect/db';
-import { event, site, member } from '@/db/schema';
+import { event, site } from '@/db/schema';
+import { getUserSites } from '@/lib/api/access';
 import { eq, sql, and, gte, inArray, desc, isNotNull, ne } from 'drizzle-orm';
 
 function getRangeStart(range: string): Date {
@@ -45,22 +46,10 @@ export async function GET(request: Request) {
   const program = Effect.gen(function* () {
     const db = yield* Db;
     
-    const myMembers = yield* Effect.tryPromise({
-      try: () => db.select().from(member).where(eq(member.userId, session.user.id)),
+    const sites = (yield* Effect.tryPromise({
+      try: () => getUserSites(db, session.user.id),
       catch: () => [] as any,
-    });
-    const orgIds = myMembers.map((m: any) => m.organizationId);
-    
-    let sitesQuery: any = db.select().from(site);
-    if (orgIds.length > 0) {
-      sitesQuery = sitesQuery.where(
-        sql`${site.organizationId} IN (${orgIds.join(',')}) OR ${site.createdById} = ${session.user.id}`
-      );
-    } else {
-      sitesQuery = sitesQuery.where(eq(site.createdById, session.user.id));
-    }
-    // Don't filter by activeOrgId - user should have access to all their sites
-    const sites = (yield* Effect.tryPromise({ try: () => sitesQuery, catch: () => [] as any })) as any[];
+    })) as any[];
     const hasAccess = sites.some((s: any) => s.id === siteId);
     if (!hasAccess) {
       return { error: 'Site not found or access denied' } as const;

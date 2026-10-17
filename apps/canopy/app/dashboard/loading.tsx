@@ -1,6 +1,6 @@
 export default function DashboardLoading() {
   return (
-    <div className="min-h-screen bg-[#050507] text-zinc-100 px-6 py-8">
+    <div className="min-h-screen bg-[#0b0d12] text-slate-200 px-6 py-8">
       <div className="max-w-[1120px] mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>

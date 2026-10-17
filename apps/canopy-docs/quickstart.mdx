@@ -1,0 +1,45 @@
+---
+title: "Quickstart"
+description: "Start tracking your first site in under five minutes."
+---
+
+This guide gets you from zero to live visitors. You need a running Canopy instance and access to the site you want to track.
+
+## 1. Add your site
+
+Open the dashboard, find the **Sites** section in the sidebar, and enter your domain (for example `example.com`). Canopy creates a site ID like `canopy_example_com`.
+
+## 2. Add the tracking script
+
+Paste this tag into the `<head>` of every page you want to track:
+
+```html
+<script
+  src="https://canopy.your.app/p.js"
+  data-site-id="canopy_example_com"
+  async
+></script>
+```
+
+Replace `https://canopy.your.app` with your Canopy instance URL and `canopy_example_com` with your site ID.
+
+<Tip>
+On Next.js, use the [CanopyProvider](/installation/nextjs) instead — it handles the script and SPA pageviews for you.
+</Tip>
+
+## 3. See live data
+
+Open the **Realtime** page in the dashboard. You should see yourself appear as an active visitor within a few seconds.
+
+<Check>Events post to `/api/canopy/event` on your own domain — no third-party requests leave your site.</Check>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Track custom events" icon="bullseye" href="/tracking/sdk-core">
+    Call `canopy.track()` anywhere in your code.
+  </Card>
+  <Card title="Analytics API" icon="chart-column" href="/api/analytics">
+    Query your analytics data programmatically.
+  </Card>
+</CardGroup>

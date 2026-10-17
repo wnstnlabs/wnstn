@@ -11,6 +11,8 @@ import { SidebarNav } from '@/components/dashboard/SidebarNav';
 import { WorkspaceSwitcher } from '@/components/dashboard/WorkspaceSwitcher';
 import { MobileNav } from '@/components/dashboard/MobileNav';
 import { ClientSidebar } from '@/components/dashboard/ClientSidebar';
+import { HelpMenu } from '@/components/dashboard/HelpMenu';
+import { LogOut } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -108,48 +110,38 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <div className="min-h-screen bg-[#050507] text-zinc-100 flex antialiased">
-      <aside className="hidden md:flex w-[268px] shrink-0 flex-col border-r border-white/[0.06] bg-[#0a0a0c] sticky top-0 h-screen overflow-hidden">
-        <Link href="/" className="h-[56px] px-4 flex items-center gap-3 border-b border-white/[0.06] shrink-0 hover:bg-white/[0.03] transition">
-          <span className="size-8 rounded-[10px] bg-white text-zinc-900 grid place-items-center text-[15px] font-semibold tracking-tighter shrink-0 border border-white/10 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_2px_8px_rgba(0,0,0,0.35)]">○</span>
-          <span className="leading-none min-w-0">
-            <span className="block font-semibold tracking-[-0.025em] text-[15px] text-white leading-none">canopy</span>
-            <span className="block mono text-[11px] leading-none text-zinc-500 tracking-wide mt-0.5">wnstn • analytics</span>
-          </span>
+    <div className="min-h-screen bg-[#0b0d12] text-slate-200 flex antialiased">
+      <aside className="hidden md:flex w-[256px] shrink-0 flex-col border-r border-white/[0.08] bg-[#0e1118] sticky top-0 h-screen">
+        <Link href="/" className="h-14 px-4 flex items-center gap-2.5 border-b border-white/[0.06] shrink-0">
+          <span className="size-7 rounded-md bg-rose-500 text-white grid place-items-center text-[12px] font-semibold shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_2px_8px_rgba(251,113,133,0.35)]">◈</span>
+          <span className="font-semibold tracking-[-0.02em] text-[14px] text-slate-100">canopy</span>
+          <span className="mono text-[9px] uppercase tracking-[0.18em] text-slate-700 ml-auto">analytics</span>
         </Link>
 
-        <div className="px-3 pt-3">
+        <div className="px-3 py-3 border-b border-white/[0.06] shrink-0">
           <WorkspaceSwitcher orgs={orgs} activeId={activeId} activeName={orgName ?? "Elias's workspace"} />
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 pt-5 space-y-6">
-          <div>
-            <div className="mono text-[11px] tracking-[0.14em] text-zinc-500 uppercase px-2.5 font-medium">Analytics</div>
-            <div className="mt-2.5">
-              <SidebarNav liveCount={liveCount} />
-            </div>
-          </div>
+        <div className="flex-1 overflow-y-auto py-4">
+          <SidebarNav liveCount={liveCount} />
 
-          <ClientSidebar 
-            activeId={activeId}
-            orgs={orgs}
-            activeName={orgName ?? "Elias's workspace"}
-            initialSites={sites}
-          />
+          <div className="mt-5 px-4 flex items-center justify-between">
+            <div className="mono text-[10px] uppercase tracking-[0.16em] text-slate-600 font-medium">Sites</div>
+            <div className="mono text-[10px] text-slate-700 tabular">{sites.length}</div>
+          </div>
+          <div className="mt-2 px-3">
+            <ClientSidebar 
+              activeId={activeId}
+              orgs={orgs}
+              activeName={orgName ?? "Elias's workspace"}
+              initialSites={sites}
+            />
+          </div>
         </div>
 
-        <div className="p-3 border-t border-white/[0.06] bg-[#0a0a0c]">
-          <div className="flex items-center gap-2.5 rounded-xl hover:bg-white/[0.04] px-1.5 py-1.5 -mx-1.5 transition">
-            {session.user.image ? (
-              <img src={session.user.image} alt="" className="size-8 rounded-full object-cover border border-white/10 shrink-0" />
-            ) : (
-              <span className="size-8 rounded-full bg-white text-zinc-900 grid place-items-center text-[12px] font-semibold shrink-0">E</span>
-            )}
-            <span className="min-w-0 flex-1">
-              <span className="block text-[13px] font-medium text-white leading-none truncate">{session.user.name ?? 'Elias'}</span>
-              <span className="block mono text-[11px] text-zinc-500 leading-none truncate mt-1">{session.user.email}</span>
-            </span>
-          </div>
+        <div className="px-3 py-2.5 border-t border-white/[0.06] flex items-center justify-between gap-2">
+          <span className="mono text-[10px] text-slate-600 truncate flex-1 min-w-0">{session.user.email}</span>
+          <HelpMenu />
           <form
             action={async () => {
               'use server';
@@ -159,25 +151,27 @@ export default async function DashboardLayout({ children }: { children: React.Re
               const { redirect } = await import('next/navigation');
               redirect('/login');
             }}
-            className="mt-2.5"
           >
-            <button type="submit" className="w-full mono text-[12px] tracking-wide text-zinc-500 hover:text-zinc-200 border border-white/[0.07] hover:border-white/[0.12] hover:bg-white/[0.04] rounded-xl px-3 py-2.5 transition flex items-center justify-center gap-1.5">
-              Sign out <span className="text-zinc-600">→</span>
+            <button
+              type="submit"
+              aria-label="Log out"
+              title="Log out"
+              className="size-6 grid place-items-center rounded-md border border-white/[0.08] text-slate-500 hover:text-slate-200 hover:bg-white/[0.06] transition shrink-0"
+            >
+              <LogOut className="size-3.5" />
             </button>
           </form>
         </div>
       </aside>
 
-      <div className="flex-1 min-w-0 flex flex-col bg-[#050507] relative">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.18] dark-grid" />
-        <div className="pointer-events-none absolute inset-0 opacity-100 radial-vignette" />
-        <header className="md:hidden relative h-14 px-4 flex items-center justify-between border-b border-white/[0.06] bg-[#0a0a0c]/80 backdrop-blur-xl sticky top-0 z-20">
+      <div className="flex-1 min-w-0 flex flex-col bg-[#0b0d12] relative">
+        <header className="md:hidden relative h-14 px-4 flex items-center justify-between border-b border-white/[0.08] bg-[#0e1118]/90 backdrop-blur-xl sticky top-0 z-20">
           <Link href="/" className="flex items-center gap-2">
-            <span className="size-7 rounded-lg bg-white text-zinc-900 grid place-items-center font-semibold text-xs">◯</span>
-            <span className="font-semibold text-sm tracking-tight">canopy</span>
+            <span className="size-7 rounded-lg bg-rose-500 text-white grid place-items-center font-semibold text-xs">◈</span>
+            <span className="font-semibold text-sm tracking-tight text-slate-100">canopy</span>
           </Link>
           <div className="flex items-center gap-2">
-            <span className="hidden sm:inline mono text-[10px] text-zinc-500">{sites[0]?.domain ?? ''}</span>
+            <span className="hidden sm:inline mono text-[10px] text-slate-500">{sites[0]?.domain ?? ''}</span>
             <MobileNav siteId={sites[0]?.id} />
           </div>
         </header>

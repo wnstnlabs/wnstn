@@ -2,31 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { formatNumber, formatRelativeTime, formatDuration, cn } from '@/lib/utils';
+import { formatNumber, formatDuration } from '@/lib/utils';
 import { exportAnalytics } from '@/lib/utils/export';
-import {
-  TimeSeriesChart,
-  BarChartComponent,
-  PieChartComponent,
-  MetricCard,
-  StatGrid,
-} from '@/components/charts/Charts';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { TimeSeriesChart } from '@/components/charts/Charts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import {
-  ArrowUpRight,
-  ArrowDownRight,
-  Users,
-  MousePointer,
-  Clock,
-  Share2,
-  Download,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { Button } from '@/components/ui/Button';
+import { Download } from 'lucide-react';
+import { PANEL, PanelHeader, StatCell, ListPanel, Sparkline } from '@/components/dashboard/parts';
+import { SetupRequired } from './SetupRequired';
 
 interface OverviewData {
   totalEvents: number;
@@ -46,7 +29,7 @@ interface TimeSeriesPoint {
   label: string;
 }
 
-export function DashboardOverview({ siteId }: { siteId: string }) {
+export function DashboardOverview({ siteId, domain, hasData }: { siteId: string; domain: string; hasData: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [range, setRange] = useState(searchParams.get('range') || '7d');
@@ -80,8 +63,9 @@ export function DashboardOverview({ siteId }: { siteId: string }) {
   };
 
   useEffect(() => {
+    if (!hasData) return;
     fetchData();
-  }, [siteId, range]);
+  }, [siteId, range, hasData]);
 
   const handleRangeChange = (newRange: string) => {
     setRange(newRange);
@@ -90,62 +74,54 @@ export function DashboardOverview({ siteId }: { siteId: string }) {
     router.push(`/dashboard?site=${siteId}&${params.toString()}`);
   };
 
-  const formatMetric = (num: number) => formatNumber(num, { compact: true });
-  const formatDurationMs = (ms: number) => formatDuration(ms);
+  const rangeLabel =
+    range === '1h' ? 'Last hour' : range === '24h' ? 'Last 24 hours' : range === '7d' ? 'Last 7 days' : range === '30d' ? 'Last 30 days' : 'Last 90 days';
+
+  // No domain connected yet — hold on setup instructions until the site is added
+  if (!hasData) {
+    return <SetupRequired siteId={siteId} domain={domain} />;
+  }
 
   if (loading && !overviewData) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-white">Overview</h1>
-            <p className="text-zinc-500 mt-1">Loading analytics...</p>
-          </div>
-        </div>
-        <StatGrid columns={4}>
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 animate-pulse">
-              <div className="h-4 w-20 bg-white/10 rounded mb-2" />
-              <div className="h-8 w-32 bg-white/10 rounded" />
-            </div>
+      <div className="px-3 md:px-4 max-w-[1200px] w-full mx-auto py-6 space-y-4">
+        <div className="h-12 w-56 bg-white/[0.05] rounded" />
+        <div className="h-[104px] rounded-xl border border-white/[0.08] bg-[#12151d] animate-pulse" />
+        <div className="h-[68px] rounded-xl border border-white/[0.08] bg-[#12151d] animate-pulse" />
+        <div className="h-[280px] rounded-xl border border-white/[0.08] bg-[#12151d] animate-pulse" />
+        <div className="grid gap-4 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-48 rounded-xl border border-white/[0.08] bg-[#12151d] animate-pulse" />
           ))}
-        </StatGrid>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="border-red-500/20">
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-3 text-red-400">
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <p>{error}</p>
-            <Button onClick={fetchData} variant="outline" size="sm">Retry</Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="px-3 md:px-4 max-w-[1200px] w-full mx-auto py-6">
+        <div className="rounded-xl border border-red-500/20 bg-red-500/[0.04] p-4 flex items-center gap-3">
+          <p className="text-sm text-red-400 flex-1">{error}</p>
+          <Button onClick={fetchData} variant="outline" size="sm">Retry</Button>
+        </div>
+      </div>
     );
   }
 
   const data = overviewData!;
-  const tsData = timeSeriesData!;
+  const ts = timeSeriesData!;
 
   return (
-    <div className="px-4 md:px-7 max-w-[1120px] w-full mx-auto space-y-6">
-      {/* Header with range selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="px-3 md:px-4 max-w-[1200px] w-full mx-auto py-6 space-y-4">
+      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Overview</h1>
-          <p className="text-zinc-500 mt-1">
-            {siteId} • {range === '1h' ? 'Last hour' : range === '24h' ? 'Last 24 hours' : range === '7d' ? 'Last 7 days' : range === '30d' ? 'Last 30 days' : 'Last 90 days'}
-          </p>
+          <p className="mono text-[10px] uppercase tracking-[0.16em] text-rose-400 font-medium">Overview</p>
+          <h1 className="mt-1 text-[22px] font-semibold tracking-[-0.02em] text-slate-100 truncate max-w-[420px]">{siteId}</h1>
         </div>
         <div className="flex items-center gap-2">
           <Select value={range} onValueChange={handleRangeChange}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[160px] h-9">
               <SelectValue placeholder="Select range" />
             </SelectTrigger>
             <SelectContent>
@@ -157,122 +133,41 @@ export function DashboardOverview({ siteId }: { siteId: string }) {
             </SelectContent>
           </Select>
           <Button variant="outline" size="sm" onClick={() => exportAnalytics({ siteId, range, format: 'csv' })}>
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4" />
             Export
           </Button>
         </div>
+      </header>
+
+      <div className={`${PANEL} p-5 flex flex-col md:flex-row md:items-center gap-5`}>
+        <div className="shrink-0">
+          <p className="mono text-[10px] font-medium text-slate-500 uppercase tracking-[0.14em]">Pageviews · {rangeLabel}</p>
+          <p className="mt-1 text-5xl font-semibold tabular tracking-tight text-slate-100 leading-none">{formatNumber(data.totalPageviews)}</p>
+          <p className="mt-2 text-xs text-slate-500">
+            {formatNumber(data.uniqueVisitors)} unique visitors · {data.bounceRate.toFixed(1)}% bounce
+          </p>
+        </div>
+        <Sparkline data={ts} color="#fb7185" className="flex-1 min-w-0 h-[64px]" />
       </div>
 
-      {/* Key Metrics */}
-      <StatGrid columns={4}>
-        <MetricCard
-          title="Total Events"
-          value={formatMetric(data.totalEvents)}
-          icon={<MousePointer className="h-6 w-6" />}
-          trend="up"
-        />
-        <MetricCard
-          title="Pageviews"
-          value={formatMetric(data.totalPageviews)}
-          icon={<ArrowUpRight className="h-6 w-6" />}
-          trend="up"
-        />
-        <MetricCard
-          title="Unique Visitors"
-          value={formatMetric(data.uniqueVisitors)}
-          icon={<Users className="h-6 w-6" />}
-          trend="up"
-        />
-        <MetricCard
-          title="Bounce Rate"
-          value={`${data.bounceRate.toFixed(1)}%`}
-          icon={<ArrowDownRight className="h-6 w-6" />}
-          trend={data.bounceRate > 50 ? 'down' : 'up'}
-        />
-        <MetricCard
-          title="Avg Session"
-          value={formatDurationMs(data.avgSessionDuration)}
-          icon={<Clock className="h-6 w-6" />}
-        />
-        <MetricCard
-          title="Events/Visitor"
-          value={data.uniqueVisitors > 0 ? (data.totalEvents / data.uniqueVisitors).toFixed(1) : '0'}
-          icon={<Share2 className="h-6 w-6" />}
-        />
-      </StatGrid>
+      <div className={`${PANEL} grid grid-cols-2 md:grid-cols-4 divide-x divide-white/[0.06]`}>
+        <StatCell label="Total Events" value={formatNumber(data.totalEvents)} />
+        <StatCell label="Unique Visitors" value={formatNumber(data.uniqueVisitors)} />
+        <StatCell label="Bounce Rate" value={`${data.bounceRate.toFixed(1)}%`} />
+        <StatCell label="Avg Session" value={formatDuration(data.avgSessionDuration)} />
+      </div>
 
-      {/* Time Series Chart */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Traffic Over Time</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TimeSeriesChart
-            data={tsData}
-            height={300}
-            color="#3b82f6"
-            showArea={true}
-          />
-        </CardContent>
-      </Card>
+      <div className={PANEL}>
+        <PanelHeader title={`Traffic · ${rangeLabel}`} />
+        <div className="p-4">
+          <TimeSeriesChart data={ts} height={280} color="#fb7185" showArea={true} />
+        </div>
+      </div>
 
-      {/* Breakdown Charts */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Top Pages</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BarChartComponent
-              data={data.topPages}
-              height={300}
-              maxBars={10}
-              horizontal={true}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Top Referrers</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PieChartComponent
-              data={data.topReferrers}
-              height={300}
-              maxSlices={6}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Top Countries</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BarChartComponent
-              data={data.topCountries}
-              height={300}
-              maxBars={10}
-              horizontal={true}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Events Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PieChartComponent
-              data={[
-                { key: 'Pageviews', count: data.totalPageviews, percentage: 0 },
-                { key: 'Other Events', count: data.totalEvents - data.totalPageviews, percentage: 0 },
-              ]}
-              height={300}
-            />
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <ListPanel title="Top Pages" items={data.topPages} accent="#fb7185" />
+        <ListPanel title="Top Referrers" items={data.topReferrers} accent="#fb7185" />
+        <ListPanel title="Top Countries" items={data.topCountries} accent="#2dd4bf" />
       </div>
     </div>
   );

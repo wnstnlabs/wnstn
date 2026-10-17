@@ -1,0 +1,161 @@
+---
+title: "Core SDK"
+description: "The @wnstn/canopy tracker — init, events, hooks, sessions, and DNT behavior."
+---
+
+The core tracker (`@wnstn/canopy`) is a vanilla JS library under 2.2 kB. It works everywhere — no framework required. If you use Next.js, see the [Next.js SDK](/tracking/sdk-nextjs) instead.
+
+## Install
+
+```bash
+pnpm add @wnstn/canopy
+```
+
+## Initialize
+
+```ts
+import { createCanopy } from '@wnstn/canopy';
+
+const canopy = createCanopy({
+  siteId: 'canopy_example_com',
+});
+```
+
+Canopy auto-starts on page load: it sends a pageview and attaches SPA + outbound tracking. The factory pattern means no `new`, no side effects at import time.
+
+You can also initialize without keeping a reference:
+
+```ts
+import { initCanopy } from '@wnstn/canopy';
+
+initCanopy({ siteId: 'canopy_example_com' });
+```
+
+## Track events
+
+```ts
+canopy.track('button_clicked', { plan: 'pro' });
+canopy.pageview();
+canopy.identify({ userId: '123' });
+canopy.reset(); // new session
+```
+
+## Global queue
+
+Calls made before init are queued and flushed on `initCanopy()`. This works from inline scripts before the bundle loads:
+
+```html
+<script>
+  window.canopy = window.canopy || [];
+  window.canopy.push(['track', 'signup']);
+</script>
+```
+
+The module-level functions do the same — safe to call any time:
+
+```ts
+import { track, pageview, identify } from '@wnstn/canopy';
+
+track('signup'); // queued if Canopy is not initialized yet
+```
+
+## Instance methods
+
+<ResponseField name="track(name, props?)" type="function">
+Track a custom event with optional properties.
+</ResponseField>
+
+<ResponseField name="pageview(props?)" type="function">
+Send a pageview for the current URL.
+</ResponseField>
+
+<ResponseField name="identify(props?)" type="function">
+Attach identity traits to the current session.
+</ResponseField>
+
+<ResponseField name="reset()" type="function">
+Clear the current session ID — the next event starts a new session.
+</ResponseField>
+
+<ResponseField name="setDefaultProps(props)" type="function">
+Merge props into the defaults attached to every event.
+</ResponseField>
+
+<ResponseField name="getSessionId()" type="function">
+Return the current session ID.
+</ResponseField>
+
+## Standalone helpers
+
+Convenience wrappers around the instance, usable without a reference:
+
+| Helper | Description |
+| - | - |
+| `trackEvent(name, props?)` | Track a custom event |
+| `trackPageview(props?)` | Track a pageview |
+| `trackIdentify(props?)` | Identify the current session |
+| `setDefaultProps(props)` | Set persistent props for all events |
+| `getSessionIdPublic()` | Get the current session ID |
+| `flushQueue()` | Send all queued pre-init calls |
+| `isInitialized()` | Whether the tracker is initialized |
+| `getOptions()` | Current configuration |
+
+## Options
+
+| Option | Type | Default | Description |
+| - | - | - | - |
+| `siteId` | `string` | — | Required. Your site ID. |
+| `endpoint` | `string` | `/api/canopy/event` | Ingestion URL, same origin. |
+| `env` | `string` | — | Tag events with an environment, e.g. `production`. |
+| `manualPageview` | `boolean` | `false` | Suppress the automatic first pageview. |
+| `disableOutbound` | `boolean` | `false` | Disable automatic outbound click tracking. |
+| `respectDnt` | `boolean` | `true` | Drop events when the browser sends Do Not Track. |
+| `sampleRate` | `number` | `1` | Send a fraction of events (0–1). |
+| `props` | `Record<string, unknown>` | — | Default props attached to every event. |
+| `debug` | `boolean` | `false` | Log sends to the console. |
+| `hooks` | `CanopyHooks` | — | Event interceptors. See [Hooks](#hooks). |
+
+## Hooks
+
+Intercept every send with `beforeSend`, `afterSend`, and `onError`:
+
+```ts
+createCanopy({
+  siteId: 'canopy_example_com',
+  hooks: {
+    beforeSend: (event) => {
+      // Return false to cancel the send
+      if (event.n === 'outbound') return false;
+      // Or modify the event and return it
+      return event;
+    },
+    afterSend: (event, response) => {},
+    onError: (event, error) => {},
+  },
+});
+```
+
+Hook errors never break the main flow — they are caught and logged.
+
+## Error handling
+
+Send failures throw `CanopyError` with a `code` and helper methods:
+
+```ts
+import { CanopyError } from '@wnstn/canopy';
+
+if (error instanceof CanopyError) {
+  error.isConfigError(); // bad or missing siteId
+  error.isNetworkError(); // send failed
+  error.isValidationError(); // payload rejected
+  error.isCancelledError(); // beforeSend returned false
+}
+```
+
+## Automatic behavior
+
+- **Pageviews** fire on load and on SPA navigations (`pushState`, `replaceState`, `popstate`, `hashchange`)
+- **Outbound clicks** fire when visitors click links to other origins
+- **DNT** — when the browser sends Do Not Track, events are dropped unless you pass `respectDnt: false`
+- **Bots** — requests with bot-like user agents are dropped
+- **Sampling** — pass `sampleRate: 0.5` to send half of all events

@@ -4,14 +4,25 @@ import { auth } from '@/lib/auth';
 import { Effect } from 'effect';
 import { CanopyRuntime } from '@/lib/effect/runtime';
 import { Db } from '@/lib/effect/db';
+import { getUserSites } from '@/lib/api/access';
 import { site } from '@/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
 function genRecord(): string {
   return `canopy-site=${randomBytes(16).toString('hex')}`;
+}
+
+/** Load a site and confirm the user can access it (org membership or creator). */
+async function getAccessibleSite(db: any, userId: string, siteId: string) {
+  const rows = await db.select().from(site).where(eq(site.id, siteId)).limit(1);
+  const current = rows[0];
+  if (!current) return null;
+  const accessible = await getUserSites(db, userId);
+  if (!accessible.some((s: any) => s.id === siteId)) return null;
+  return current;
 }
 
 export async function GET(req: Request) {
@@ -25,24 +36,13 @@ export async function GET(req: Request) {
 
   const program = Effect.gen(function* () {
     const db = yield* Db;
-    const memberships = yield* Effect.tryPromise({
-      try: () => db.select().from(site).where(eq(site.id, siteId)).limit(1),
-      catch: () => [] as any,
+    const current = yield* Effect.tryPromise({
+      try: () => getAccessibleSite(db, session.user.id, siteId),
+      catch: () => null,
     });
-    const current = memberships[0];
     if (!current) return { status: 'not_found' as const };
 
-    // check if user owns this site via org
-    const myOrgs = yield* Effect.tryPromise({
-      try: () => db.execute(sql`SELECT organization_id FROM member WHERE user_id = ${session.user.id}`),
-      catch: () => [] as any,
-    });
-    const orgIds = (myOrgs as unknown as any[]).map((m) => m.organization_id);
-    if (orgIds.length === 0 || !orgIds.includes(current.organizationId)) {
-      return { status: 'forbidden' as const };
-    }
-
-    const record = current.verificationRecord ?? genRecord();
+    const record = current.verificationRecord || genRecord();
     if (!current.verificationRecord) {
       yield* Effect.tryPromise({
         try: () => db.update(site).set({ verificationRecord: record }).where(eq(site.id, siteId)),
@@ -67,19 +67,18 @@ export async function POST(req: Request) {
 
   const program = Effect.gen(function* () {
     const db = yield* Db;
-    const memberships = yield* Effect.tryPromise({
-      try: () => db.select().from(site).where(eq(site.id, siteId)).limit(1),
-      catch: () => [] as any,
+    const current = yield* Effect.tryPromise({
+      try: () => getAccessibleSite(db, session.user.id, siteId),
+      catch: () => null,
     });
-    const current = memberships[0];
     if (!current) return { status: 'not_found' as const };
 
-    const record = current.verificationRecord ?? genRecord();
+    const record = current.verificationRecord || genRecord();
     const domain = current.domain;
 
     // Use a DNS-over-HTTPS check (Cloudflare)
     const dnsUrl = `https://cloudflare-dns.com/dns-query?name=${domain}&type=TXT`;
-    
+
     const verified = yield* Effect.tryPromise({
       try: async () => {
         const res = await fetch(dnsUrl, { headers: { accept: 'application/dns-json' } });

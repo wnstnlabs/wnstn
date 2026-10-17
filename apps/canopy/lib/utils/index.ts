@@ -46,6 +46,17 @@ export function formatDateTime(date: Date | string): string {
   });
 }
 
+export function formatBucket(date: Date | string, interval: 'minute' | 'hour' | 'day'): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (interval === 'minute') {
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+  if (interval === 'hour') {
+    return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 export function formatRelativeTime(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();

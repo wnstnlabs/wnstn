@@ -1,0 +1,75 @@
+---
+title: "Next.js"
+description: "Install Canopy in Next.js with the React SDK — provider, hooks, and SSR support."
+---
+
+The `@wnstn/canopy-nextjs` package wraps the core tracker for React and Next.js. It adds a context provider, hooks, and SPA-aware pageviews.
+
+## Install
+
+```bash
+pnpm add @wnstn/canopy-nextjs
+```
+
+Or with npm:
+
+```bash
+npm install @wnstn/canopy-nextjs
+```
+
+## Add the provider
+
+Wrap your root layout with `CanopyProvider`:
+
+```tsx title="app/layout.tsx"
+import { CanopyProvider } from '@wnstn/canopy-nextjs';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <CanopyProvider
+      siteId="canopy_example_com"
+      respectDnt={true}
+    >
+      {children}
+    </CanopyProvider>
+  );
+}
+```
+
+The provider auto-initializes the tracker, sends pageviews on route changes, and tracks outbound clicks — no extra wiring needed.
+
+## Options
+
+`CanopyProvider` and `CanopyScript` accept the full `CanopyOptions` object:
+
+| Option | Type | Description |
+| - | - | - |
+| `siteId` | `string` | Required. Your site ID. |
+| `endpoint` | `string` | Ingestion URL. Defaults to `/api/canopy/event`. |
+| `respectDnt` | `boolean` | Respect Do Not Track. Default `true`. |
+| `disableOutbound` | `boolean` | Disable automatic outbound click tracking. |
+| `manualPageview` | `boolean` | Suppress the automatic first pageview. |
+| `sampleRate` | `number` | Send only a fraction of events (0–1). |
+| `props` | `Record<string, unknown>` | Default props attached to every event. |
+| `debug` | `boolean` | Log sends to the console. |
+| `hooks` | `CanopyHooks` | `beforeSend`, `afterSend`, `onError` interceptors. |
+
+## Use hooks
+
+```tsx
+'use client';
+
+import { useCanopyTrack, useCanopyPageview } from '@wnstn/canopy-nextjs';
+
+export function SignupButton() {
+  const track = useCanopyTrack();
+
+  return (
+    <button onClick={() => track('signup_clicked', { plan: 'pro' })}>
+      Sign up
+    </button>
+  );
+}
+```
+
+Available hooks: `useCanopy`, `useCanopyTrack`, `useCanopyPageview`, `useCanopyIdentify`, `useCanopyReset`, `useCanopyInitialized`, `useCanopyOptions`, `useCanopyFlush`.

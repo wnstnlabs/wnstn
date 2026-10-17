@@ -1,0 +1,142 @@
+---
+title: "Next.js SDK"
+description: "The @wnstn/canopy-nextjs package — provider, hooks, and SSR-safe tracking for React and Next.js."
+---
+
+The Next.js SDK (`@wnstn/canopy-nextjs`) wraps the [core tracker](/tracking/sdk-core) for React and Next.js. It adds a context provider, hooks, SPA-aware pageviews, and SSR safety — on the client it renders nothing and tracks nothing until the browser is ready.
+
+## Install
+
+```bash
+pnpm add @wnstn/canopy-nextjs
+```
+
+The core package installs automatically as a dependency.
+
+<Info>
+New to Canopy? Start with the [Next.js installation guide](/installation/nextjs) for full setup.
+</Info>
+
+## Add the provider
+
+Wrap your root layout with `CanopyProvider`. It initializes the tracker synchronously on the client, sends pageviews on route changes, and tracks outbound clicks — no extra wiring needed:
+
+```tsx title="app/layout.tsx"
+import { CanopyProvider } from '@wnstn/canopy-nextjs';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <CanopyProvider siteId="canopy_example_com">
+      {children}
+    </CanopyProvider>
+  );
+}
+```
+
+The provider accepts the full [`CanopyOptions`](/tracking/sdk-core#options) object, plus:
+
+| Prop | Type | Description |
+| - | - | - |
+| `scriptSrc` | `string \| false` | Inject a tracking script tag. Pass `false` to disable. |
+
+If the tracker is already initialized (for example by an inline script), the provider reuses the existing instance and syncs your options into it.
+
+## CanopyScript
+
+Load the tracker script (`/p.js` by default) without the provider — useful when you only want the script tag and global-queue tracking:
+
+```tsx
+import { CanopyScript } from '@wnstn/canopy-nextjs';
+
+<CanopyScript siteId="canopy_example_com" src="/p.js" />;
+```
+
+## Hooks
+
+All hooks work before and after init — they fall back to the core queue when the provider has not mounted yet.
+
+<AccordionGroup>
+  <Accordion title="useCanopyTrack">
+    Track custom events.
+
+    ```tsx
+    'use client';
+
+    import { useCanopyTrack } from '@wnstn/canopy-nextjs';
+
+    export function SignupButton() {
+      const { track } = useCanopyTrack();
+
+      return (
+        <button onClick={() => track('signup_clicked', { plan: 'pro' })}>
+          Sign up
+        </button>
+      );
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="useCanopyPageview">
+    Send a pageview for the current URL — for route changes outside the automatic flow.
+
+    ```tsx
+    const { pageview } = useCanopyPageview();
+    pageview({ path: '/pricing' });
+    ```
+  </Accordion>
+
+  <Accordion title="useCanopyIdentify">
+    Attach identity traits to the current session.
+
+    ```tsx
+    const { identify } = useCanopyIdentify();
+    identify({ userId: '123', plan: 'pro' });
+    ```
+  </Accordion>
+
+  <Accordion title="useCanopyReset">
+    Clear the session — the next event starts a new one.
+
+    ```tsx
+    const { reset } = useCanopyReset();
+    reset();
+    ```
+  </Accordion>
+
+  <Accordion title="useCanopyInstance">
+    Full access to every method: `track`, `pageview`, `identify`, `reset`, `setDefaultProps`, `getSessionId`, and the current `options`.
+
+    ```tsx
+    const { track, setDefaultProps, getSessionId } = useCanopyInstance();
+    ```
+  </Accordion>
+
+  <Accordion title="useCanopy">
+    Returns the underlying `CanopyInstance` or `null` — use it when you need direct access and handle absence yourself.
+  </Accordion>
+
+  <Accordion title="useCanopyInitialized">
+    Whether the tracker is ready.
+
+    ```tsx
+    const ready = useCanopyInitialized();
+    ```
+  </Accordion>
+
+  <Accordion title="useCanopyOptions">
+    Returns the active `CanopyOptions` or `null`.
+  </Accordion>
+
+  <Accordion title="useCanopyFlush">
+    Flush all queued pre-init calls.
+
+    ```tsx
+    const flush = useCanopyFlush();
+    flush();
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Re-exports
+
+The package re-exports everything from the core SDK — `createCanopy`, `initCanopy`, `track`, `pageview`, `identify`, `getCanopy`, `flushQueue`, `isInitialized`, `getOptions`, `CanopyError`, and the `CanopyOptions` / `CanopyInstance` / `CanopyHooks` types — so you can import from one package.

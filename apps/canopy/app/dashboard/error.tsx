@@ -19,18 +19,18 @@ export default function DashboardError({
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-[#050507] text-zinc-100 flex items-center justify-center px-6">
+    <div className="min-h-screen bg-[#0b0d12] text-slate-200 flex items-center justify-center px-6">
       <Card className="w-full max-w-md border-red-500/20 bg-red-500/5">
         <CardContent className="pt-8 text-center">
           <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
             <AlertTriangle className="h-6 w-6 text-red-400" />
           </div>
           <h1 className="text-xl font-semibold text-white">Something went wrong</h1>
-          <p className="mt-2 text-sm text-zinc-400">
+          <p className="mt-2 text-sm text-slate-400">
             We couldn't load your analytics data. This might be a temporary issue.
           </p>
           {error.digest && (
-            <p className="mt-2 mono text-xs text-zinc-600">Error ID: {error.digest}</p>
+            <p className="mt-2 mono text-xs text-slate-600">Error ID: {error.digest}</p>
           )}
           <div className="mt-6 flex flex-col sm:flex-row gap-2 justify-center">
             <Button onClick={reset}>

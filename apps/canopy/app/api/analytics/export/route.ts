@@ -3,8 +3,9 @@ import { auth } from '@/lib/auth';
 import { Effect } from 'effect';
 import { CanopyRuntime } from '@/lib/effect/runtime';
 import { Db } from '@/lib/effect/db';
-import { event, site, member } from '@/db/schema';
-import { eq, sql, and, gte, desc, inArray } from 'drizzle-orm';
+import { event } from '@/db/schema';
+import { getUserSites } from '@/lib/api/access';
+import { eq, and, gte, desc } from 'drizzle-orm';
 
 function getRangeStart(range: string): Date {
   const now = new Date();
@@ -53,19 +54,8 @@ export async function GET(request: Request) {
     const db = yield* Db;
 
     // Verify access
-    const myMembers = yield* Effect.tryPromise({
-      try: () => db.select().from(member).where(eq(member.userId, session.user.id)),
-      catch: () => [] as any,
-    });
-    const orgIds = (myMembers as any[]).map((m: any) => m.organizationId);
-    let sitesQuery: any = db.select().from(site);
-    if (orgIds.length > 0) sitesQuery = sitesQuery.where(
-      sql`${site.organizationId} IN (${orgIds.join(',')}) OR ${site.createdById} = ${session.user.id}`
-    );
-    else sitesQuery = sitesQuery.where(eq(site.createdById, session.user.id));
-    // Don't filter by activeOrgId - user should have access to all their sites
     const sites = (yield* Effect.tryPromise({
-      try: () => sitesQuery,
+      try: () => getUserSites(db, session.user.id),
       catch: () => [] as any,
     })) as any[];
     if (!sites.some((s: any) => s.id === siteId)) {

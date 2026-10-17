@@ -10,13 +10,13 @@ export default defineConfig({
       fileName: (format) => `canopy-nextjs.${format}.js`,
     },
     rollupOptions: {
-      external: ['react', 'next/script', '@wnstn/canopy', 'effect'],
+      external: ['react', 'next/script', '@wnstn/canopy'],
       output: {
+        banner: "'use client'",
         globals: {
           react: 'React',
           'next/script': 'nextScript',
           '@wnstn/canopy': 'Canopy',
-          effect: 'Effect',
         },
       },
     },

@@ -34,11 +34,15 @@ import { track } from '@wnstn/canopy';
 track('signup', { plan: 'pro' });
 ```
 
-## Next.js — `wnstn/canopy/nextjs`
+## Next.js — `@wnstn/canopy-nextjs`
+
+```bash
+pnpm add @wnstn/canopy-nextjs
+```
 
 ```tsx
 // app/layout.tsx
-import { CanopyProvider } from '@wnstn/canopy/nextjs';
+import { CanopyProvider } from '@wnstn/canopy-nextjs';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -53,18 +57,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 // any client component
 'use client';
-import { useCanopyTrack } from '@wnstn/canopy/nextjs';
+import { useCanopyTrack } from '@wnstn/canopy-nextjs';
 
 function Pricing() {
   const { track } = useCanopyTrack();
   return <button onClick={() => track('click_pricing')}>Upgrade</button>;
 }
-```
-
-No extra install — `nextjs` is a **subpath export** of `@wnstn/canopy`:
-
-```ts
-import { CanopyProvider } from '@wnstn/canopy/nextjs';
 ```
 
 ## Why private, safe, small

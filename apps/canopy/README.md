@@ -1,10 +1,10 @@
 # Canopy — Privacy-first analytics (wnstn/canopy)
 
-Next.js 16 + Drizzle + Effect + better-auth. Tiny `< 2kb` cookieless tracker at `@wnstn/canopy`, wrapper at `@wnstn/canopy/nextjs`.
+Next.js 16 + Drizzle + Effect + better-auth. Tiny `< 2kb` cookieless tracker at `@wnstn/canopy`, wrapper at `@wnstn/canopy-nextjs`.
 
 Package names (as requested):
 - Tracker: `wnstn/canopy` → npm `@wnstn/canopy` (`packages/canopy`)
-- Next.js wrapper: `wnstn/canopy/nextjs` → subpath export of the same package (no extra install)
+- Next.js wrapper: `@wnstn/canopy-nextjs` → standalone package (`packages/canopy-nextjs`)
 - App: `wnstn/canopy-client` → `apps/canopy` (this Next.js app, private)
 
 ## Stack — no useState / useEffect
@@ -73,13 +73,13 @@ initCanopy({ siteId: 'canopy_xxx' });
 track('signup', { plan: 'pro' });
 ```
 
-### Next.js wrapper — wnstn/canopy/nextjs
+### Next.js wrapper — @wnstn/canopy-nextjs
 
-Subpath export, **Effect-based, no useState/useEffect**:
+Standalone package, **no useState/useEffect**:
 
 ```tsx
 // app/layout.tsx
-import { CanopyProvider } from '@wnstn/canopy/nextjs';
+import { CanopyProvider } from '@wnstn/canopy-nextjs';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return <html><body>
@@ -88,9 +88,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   </body></html>;
 }
 
-// any client component — Effect-wrapped emit
+// any client component
 'use client';
-import { useCanopyTrack } from '@wnstn/canopy/nextjs';
+import { useCanopyTrack } from '@wnstn/canopy-nextjs';
 const { track } = useCanopyTrack();
 track('click_pricing');
 ```
@@ -187,7 +187,7 @@ grep -R "useState\|useEffect" --include="*.ts" --include="*.tsx" apps/canopy pac
 
 `components/domain-input.tsx` uses a **server action** (`app/actions.ts`) → `Effect.normalizeDomainEffect` pipeline + `redirect`, with a CSS-only radio group for tabs (no client state).
 
-`packages/canopy/src/nextjs.tsx` uses `useMemo` + `Effect.runSync`, no `useEffect`/`useState`.
+`packages/canopy-nextjs/src/index.tsx` uses `useMemo` for init, no `useEffect`/`useState`.
 
 ## Env
 

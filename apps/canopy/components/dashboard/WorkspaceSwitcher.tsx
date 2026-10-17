@@ -40,46 +40,46 @@ export function WorkspaceSwitcher({ orgs, activeId, activeName }: { orgs: Org[];
 
   if (orgs.length === 0) {
     return (
-      <div className="w-full flex items-center gap-2.5 rounded-xl border border-white/[0.07] bg-white/[0.03] px-2.5 py-2.5">
-        <span className="size-8 rounded-lg bg-white text-zinc-900 grid place-items-center font-semibold text-[12px] shrink-0">{activeName.slice(0,1).toUpperCase()}</span>
-        <span className="min-w-0 flex-1"><span className="block text-[13px] font-medium text-white leading-none truncate">{activeName}</span><span className="block mono text-[10px] text-zinc-500 leading-none truncate mt-1">Workspace</span></span>
+      <div className="w-full flex items-center gap-2.5 rounded-lg border border-white/[0.08] bg-[#0d1017] px-2.5 py-2">
+        <span className="size-8 rounded-md bg-rose-500/15 text-rose-300 border border-rose-500/20 grid place-items-center font-semibold text-[12px] shrink-0">{activeName.slice(0,1).toUpperCase()}</span>
+        <span className="min-w-0 flex-1"><span className="block text-[13px] font-medium text-slate-200 leading-none truncate">{activeName}</span><span className="block mono text-[10px] text-slate-600 leading-none truncate mt-1">Workspace</span></span>
       </div>
     );
   }
 
   return (
     <div className="relative">
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-2.5 rounded-xl border border-white/[0.07] bg-white/[0.03] hover:bg-white/[0.05] px-2.5 py-2.5 text-left transition">
-        <span className="size-8 rounded-lg bg-white text-zinc-900 grid place-items-center font-semibold text-[12px] shrink-0">{activeName.slice(0,1).toUpperCase()}</span>
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-2.5 rounded-lg border border-white/[0.08] bg-[#0d1017] hover:bg-[#12151d] hover:border-white/[0.14] px-2.5 py-2 text-left transition">
+        <span className="size-8 rounded-md bg-rose-500/15 text-rose-300 border border-rose-500/20 grid place-items-center font-semibold text-[12px] shrink-0">{activeName.slice(0,1).toUpperCase()}</span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[13px] font-medium text-white leading-none truncate">{activeName}</span>
-          <span className="block mono text-[10px] text-zinc-500 leading-none truncate mt-1">{orgs.length} workspaces • click to switch</span>
+          <span className="block text-[13px] font-medium text-slate-200 leading-none truncate">{activeName}</span>
+          <span className="block mono text-[10px] text-slate-600 leading-none truncate mt-1">{orgs.length} workspaces • click to switch</span>
         </span>
-        <span className="text-zinc-500 text-xs">{open ? '▴' : '▾'}</span>
+        <span className="text-slate-600 text-xs">{open ? '▴' : '▾'}</span>
       </button>
 
       {open && (
-        <div className="absolute z-20 top-full mt-2 w-full rounded-xl border border-white/[0.08] bg-[#111113] shadow-[0_16px_32px_rgba(0,0,0,0.5)] overflow-hidden">
-          <div className="max-h-[220px] overflow-auto p-1.5 space-y-1">
+        <div className="absolute z-20 top-full mt-2 w-full rounded-lg border border-white/[0.09] bg-[#12151d] shadow-[0_8px_32px_rgba(0,0,0,0.55)] overflow-hidden">
+          <div className="max-h-[220px] overflow-auto p-1.5 space-y-0.5">
             {orgs.map((o) => (
               <button
                 key={o.id}
                 onClick={() => setActive(o.id)}
-                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition ${activeId === o.id ? 'bg-white text-zinc-900' : 'hover:bg-white/[0.06] text-zinc-300'}`}
+                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-left transition ${activeId === o.id ? 'bg-rose-500/10 text-rose-200' : 'hover:bg-white/[0.05] text-slate-300'}`}
               >
-                <span className={`size-7 rounded-lg grid place-items-center text-[11px] font-semibold shrink-0 ${activeId === o.id ? 'bg-zinc-900 text-white' : 'bg-white/[0.08] text-zinc-300'}`}>{o.name.slice(0,2).toUpperCase()}</span>
+                <span className={`size-7 rounded-md grid place-items-center text-[10px] font-semibold mono shrink-0 ${activeId === o.id ? 'bg-rose-500/20 text-rose-200 border border-rose-500/25' : 'bg-white/[0.06] text-slate-400 border border-white/[0.06]'}`}>{o.name.slice(0,2).toUpperCase()}</span>
                 <span className="flex-1 min-w-0">
-                  <span className={`block text-[13px] leading-none truncate ${activeId === o.id ? 'text-zinc-900 font-medium' : 'text-white'}`}>{o.name}</span>
-                  <span className={`block mono text-[10px] truncate ${activeId === o.id ? 'text-zinc-600' : 'text-zinc-500'}`}>{o.slug}</span>
+                  <span className={`block text-[13px] leading-none truncate ${activeId === o.id ? 'text-rose-200 font-medium' : 'text-slate-200'}`}>{o.name}</span>
+                  <span className={`block mono text-[10px] truncate mt-0.5 ${activeId === o.id ? 'text-rose-400/60' : 'text-slate-600'}`}>{o.slug}</span>
                 </span>
-                {activeId === o.id && <span className="size-1.5 rounded-full bg-emerald-500" />}
+                {activeId === o.id && <span className="size-1.5 rounded-full bg-rose-400" />}
               </button>
             ))}
           </div>
 
           <form onSubmit={createWorkspace} className="p-2 border-t border-white/[0.06] flex gap-1.5">
-            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="New workspace name" className="flex-1 min-w-0 rounded-lg bg-white/[0.06] border border-white/[0.08] px-2.5 py-1.5 text-xs text-white placeholder:text-zinc-600 outline-none focus:border-white/20" />
-            <button type="submit" disabled={creating} className="rounded-lg bg-white text-zinc-900 px-3 py-1.5 text-xs font-medium hover:bg-zinc-100 disabled:opacity-50">Create</button>
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="New workspace name" className="flex-1 min-w-0 rounded-md bg-[#0d1017] border border-white/[0.09] px-2.5 py-1.5 text-[12px] text-slate-200 placeholder:text-slate-600 outline-none focus:border-rose-400/40" />
+            <button type="submit" disabled={creating} className="rounded-md bg-rose-500 text-white px-3 py-1.5 text-[12px] font-medium hover:bg-rose-400 disabled:opacity-50">Create</button>
           </form>
         </div>
       )}

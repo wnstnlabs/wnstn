@@ -1,0 +1,50 @@
+---
+title: "Script tag"
+description: "Install Canopy on any site with a single script tag."
+---
+
+The script tag is the simplest way to install Canopy. It works on any site — plain HTML, WordPress, Rails, Astro, anything that can load a `<script>`.
+
+## Add the script
+
+Paste this into the `<head>` of every page you want to track:
+
+```html
+<script
+  src="https://canopy.your.app/p.js"
+  data-site-id="canopy_example_com"
+  async
+></script>
+```
+
+The script auto-initializes, sends a pageview on load, and automatically tracks outbound clicks and SPA navigations (pushState, replaceState, popstate, hashchange).
+
+## Attributes
+
+<ParamField name="data-site-id" type="string" required>
+Your site ID, e.g. `canopy_example_com`. Without it, the script does nothing.
+</ParamField>
+
+<ParamField name="data-endpoint" type="string">
+Where events are posted. Defaults to `/api/canopy/event` on the serving origin. Set a full URL when Canopy runs on a different origin than your site.
+</ParamField>
+
+<ParamField name="data-respect-dnt" type="string">
+Set to `false` to track visitors with Do Not Track enabled. Tracking respects DNT by default.
+</ParamField>
+
+<ParamField name="data-disable-outbound" type="string">
+The presence of this attribute disables automatic outbound click tracking.
+</ParamField>
+
+<ParamField name="data-env" type="string">
+Optional environment label attached to every event (for example `production`).
+</ParamField>
+
+## Verify the install
+
+Open your site, open the browser console, and check that a request to `/api/canopy/event` returns `202`. Then check the **Realtime** page in the dashboard.
+
+<Note>
+The served script is under 2.2 kB gzipped. It sends events with `navigator.sendBeacon` when available, falling back to `fetch` with `keepalive`.
+</Note>
