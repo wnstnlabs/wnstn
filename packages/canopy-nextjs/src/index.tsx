@@ -26,10 +26,18 @@ type CanopyContextValue = CanopyInstance | null;
 const CanopyContext = createContext<CanopyContextValue>(null);
 
 /**
+ * Default ingestion endpoint — Canopy Cloud.
+ * Override with the `endpoint` option when self-hosting.
+ */
+export const DEFAULT_ENDPOINT = 'https://cano-py.wnstn.space/api/canopy/event';
+
+/**
  * CanopyProvider — Next.js wrapper for @wnstn/canopy
  *
  * Factory-based, no useState / useEffect.
  * Uses synchronous init with option sync inside render.
+ *
+ * `endpoint` defaults to Canopy Cloud — pass your own URL when self-hosting.
  *
  * @example
  * // app/layout.tsx
@@ -48,7 +56,7 @@ const CanopyContext = createContext<CanopyContextValue>(null);
  */
 export function CanopyProvider({
   siteId,
-  endpoint,
+  endpoint = DEFAULT_ENDPOINT,
   env,
   manualPageview,
   disableOutbound,
@@ -131,7 +139,7 @@ export function CanopyProvider({
 }
 
 export function CanopyScript(props: CanopyOptions & { src?: string }) {
-  const { siteId, endpoint, env, src = '/p.js' } = props;
+  const { siteId, endpoint = DEFAULT_ENDPOINT, env, src = '/p.js' } = props;
   return <Script src={src} data-site-id={siteId} data-endpoint={endpoint} data-env={env} strategy="afterInteractive" />;
 }
 

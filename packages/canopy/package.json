@@ -1,6 +1,6 @@
 {
   "name": "@wnstn/canopy",
-  "version": "0.0.1-beta.2",
+  "version": "0.0.1-beta.3",
   "description": "Canopy — safest, smallest, privacy-first analytics (< 2kb). Cookieless by default, DNT aware, no fingerprinting.",
   "type": "module",
   "main": "./dist/canopy.cjs.js",

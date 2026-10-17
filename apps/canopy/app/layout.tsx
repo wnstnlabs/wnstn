@@ -22,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased bg-white text-zinc-900">
-        {siteId ? <CanopyProvider siteId={siteId}>{content}</CanopyProvider> : content}
+        {siteId ? <CanopyProvider siteId={siteId} endpoint="/api/canopy/event">{content}</CanopyProvider> : content}
       </body>
     </html>
   );
