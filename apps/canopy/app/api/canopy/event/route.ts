@@ -3,7 +3,7 @@ import { Effect } from 'effect';
 import { z } from 'zod';
 import crypto from 'crypto';
 import { site, event } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { CanopyRuntime } from '@/lib/effect/runtime';
 import { Db } from '@/lib/effect/db';
 
@@ -35,28 +35,52 @@ function getIp(req: NextRequest): string | null {
   return req.headers.get('x-real-ip') ?? null;
 }
 
-function cors(origin: string) {
-  return {
-    'Access-Control-Allow-Origin': origin,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400',
-  } as Record<string, string>;
+function getRequestHost(req: NextRequest): string | null {
+  const origin = req.headers.get('origin');
+  if (origin && origin !== 'null') {
+    try {
+      return new URL(origin).hostname.toLowerCase() || null;
+    } catch {}
+  }
+  const referer = req.headers.get('referer');
+  if (referer) {
+    try {
+      return new URL(referer).hostname.toLowerCase() || null;
+    } catch {}
+  }
+  return null;
+}
+
+function hostMatchesDomain(host: string, domain: string): boolean {
+  return host === domain || host.endsWith(`.${domain}`);
+}
+
+function corsHeaders(allowOrigin: string | null): Record<string, string> {
+  const headers: Record<string, string> = { Vary: 'Origin' };
+  if (allowOrigin) {
+    headers['Access-Control-Allow-Origin'] = allowOrigin;
+    headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS';
+    headers['Access-Control-Allow-Headers'] = 'Content-Type';
+    headers['Access-Control-Max-Age'] = '86400';
+  }
+  return headers;
 }
 
 export async function POST(req: NextRequest) {
-  const origin = req.headers.get('origin') ?? '*';
+  const originHeader = req.headers.get('origin');
+  const requestHost = getRequestHost(req);
+  const isProd = process.env.NODE_ENV === 'production';
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: 'invalid json' }, { status: 400, headers: cors(origin) });
+    return NextResponse.json({ error: 'invalid json' }, { status: 400, headers: corsHeaders(null) });
   }
 
   const parsed = Body.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: 'invalid payload', issues: parsed.error.flatten() }, { status: 400, headers: cors(origin) });
+    return NextResponse.json({ error: 'invalid payload', issues: parsed.error.flatten() }, { status: 400, headers: corsHeaders(null) });
   }
 
   const { s: siteId, n: name, u: url, r: referrer, p: path, t: title, w, props, sid } = parsed.data;
@@ -68,12 +92,12 @@ export async function POST(req: NextRequest) {
   const program = Effect.gen(function* () {
     const dbLive = yield* Db;
     const found = yield* Effect.tryPromise({
-      try: () => dbLive.select({ id: site.id }).from(site).where(eq(site.id, siteId)).limit(1),
+      try: () => dbLive.select({ id: site.id, domain: site.domain }).from(site).where(eq(site.id, siteId)).limit(1),
       catch: (cause) => new Error(String(cause)),
     });
 
     if (found.length === 0) {
-      if (process.env.NODE_ENV !== 'production') {
+      if (!isProd) {
         yield* Effect.tryPromise({
           try: () =>
             dbLive
@@ -91,6 +115,11 @@ export async function POST(req: NextRequest) {
       } else {
         return yield* Effect.fail({ _tag: 'UnknownSite' } as const);
       }
+    }
+
+    const siteDomain = found[0]?.domain;
+    if (siteDomain && isProd && requestHost && !hostMatchesDomain(requestHost, siteDomain)) {
+      return yield* Effect.fail({ _tag: 'ForbiddenOrigin' } as const);
     }
 
     const id = `evt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -119,21 +148,49 @@ export async function POST(req: NextRequest) {
 
   // Map Effect exit to HTTP without React hooks
   if (exit._tag === 'Success') {
-    return new NextResponse(null, { status: 202, headers: cors(origin) });
+    const allow = originHeader && originHeader !== 'null' ? originHeader : null;
+    return new NextResponse(null, { status: 202, headers: corsHeaders(allow) });
   }
 
   // Extract failure cause
   const cause = (exit as unknown as { cause: unknown }).cause as unknown;
-  const isUnknownSite = JSON.stringify(cause ?? '').includes('UnknownSite');
-  if (isUnknownSite) {
-    return NextResponse.json({ error: 'unknown site' }, { status: 404, headers: cors(origin) });
+  const causeTag = JSON.stringify(cause ?? '');
+  if (causeTag.includes('ForbiddenOrigin')) {
+    return NextResponse.json({ error: 'origin not allowed' }, { status: 403, headers: corsHeaders(null) });
+  }
+  if (causeTag.includes('UnknownSite')) {
+    return NextResponse.json({ error: 'unknown site' }, { status: 404, headers: corsHeaders(null) });
   }
 
   console.error('[canopy] drizzle insert failed', cause);
-  return NextResponse.json({ error: 'store failed' }, { status: 500, headers: cors(origin) });
+  return NextResponse.json({ error: 'store failed' }, { status: 500, headers: corsHeaders(null) });
 }
 
 export async function OPTIONS(req: NextRequest) {
-  const origin = req.headers.get('origin') ?? '*';
-  return new NextResponse(null, { status: 204, headers: cors(origin) });
+  const originHeader = req.headers.get('origin');
+  const requestHost = getRequestHost(req);
+
+  if (!originHeader || originHeader === 'null' || !requestHost) {
+    return new NextResponse(null, { status: 204, headers: corsHeaders(null) });
+  }
+
+  const program = Effect.gen(function* () {
+    const dbLive = yield* Db;
+    const found = yield* Effect.tryPromise({
+      try: () =>
+        dbLive
+          .select({ id: site.id })
+          .from(site)
+          .where(sql`${requestHost} = ${site.domain} OR ${requestHost} LIKE ${'%.'} || ${site.domain}`)
+          .limit(1),
+      catch: (cause) => new Error(String(cause)),
+    });
+    return found.length > 0;
+  });
+
+  const exit = await CanopyRuntime.runPromiseExit(program);
+  const siteFound = exit._tag === 'Success' && exit.value === true;
+  const isProd = process.env.NODE_ENV === 'production';
+  const allow = siteFound || !isProd ? originHeader : null;
+  return new NextResponse(null, { status: 204, headers: corsHeaders(allow) });
 }

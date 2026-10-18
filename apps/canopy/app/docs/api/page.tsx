@@ -59,6 +59,7 @@ Content-Type: application/json
               ['202', <span className="text-slate-500">(empty)</span>, 'Event accepted and stored.'],
               ['400', <C>{'{ "error": "invalid json" }'}</C>, 'Body is not parseable JSON.'],
               ['400', <C>{'{ "error": "invalid payload", "issues": … }'}</C>, 'A field failed validation — issues lists what.'],
+              ['403', <C>{'{ "error": "origin not allowed" }'}</C>, 'Request origin does not match the site’s registered domain (production only).'],
               ['404', <C>{'{ "error": "unknown site" }'}</C>, 'Site ID does not exist (production only — see note below).'],
               ['500', <C>{'{ "error": "store failed" }'}</C>, 'Database insert failed.'],
             ]}
@@ -69,9 +70,11 @@ Content-Type: application/json
           </Callout>
           <Sub>CORS</Sub>
           <P>
-            Responses allow cross-origin POSTs from any origin (reflected in{' '}
-            <C>Access-Control-Allow-Origin</C>), with preflight caching of 24 hours. That is what lets the tracker
-            live on one host while events post to another — still your infrastructure, no third party involved.
+            Cross-origin POSTs are only allowed from the site’s registered domain (including subdomains), validated
+            server-side against the request’s <C>Origin</C> or <C>Referer</C> header, and mirrored back in{' '}
+            <C>Access-Control-Allow-Origin</C> with 24-hour preflight caching. That is what lets the tracker live on
+            one host while events post to another — still your infrastructure, no third party involved. Events from
+            any other origin are rejected with <C>403</C>.
           </P>
           <Sub>Server-side enrichment</Sub>
           <P>
