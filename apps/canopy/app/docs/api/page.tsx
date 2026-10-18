@@ -60,6 +60,7 @@ Content-Type: application/json
               ['400', <C>{'{ "error": "invalid json" }'}</C>, 'Body is not parseable JSON.'],
               ['400', <C>{'{ "error": "invalid payload", "issues": … }'}</C>, 'A field failed validation — issues lists what.'],
               ['403', <C>{'{ "error": "origin not allowed" }'}</C>, 'Request origin does not match the site’s registered domain (production only).'],
+              ['403', <C>{'{ "error": "site not verified" }'}</C>, 'Production ingestion requires a verified domain — add the TXT record and verify in Settings (production only).'],
               ['404', <C>{'{ "error": "unknown site" }'}</C>, 'Site ID does not exist (production only — see note below).'],
               ['500', <C>{'{ "error": "store failed" }'}</C>, 'Database insert failed.'],
             ]}
@@ -75,6 +76,12 @@ Content-Type: application/json
             <C>Access-Control-Allow-Origin</C> with 24-hour preflight caching. That is what lets the tracker live on
             one host while events post to another — still your infrastructure, no third party involved. Events from
             any other origin are rejected with <C>403</C>.
+          </P>
+          <Sub>Abuse protections</Sub>
+          <P>
+            Production ingestion requires the site's domain to be verified, and events are rate-limited per site and
+            per visitor IP. Events that exceed the limits are dropped silently — the endpoint still answers{' '}
+            <C>202</C> — and the dashboard shows a verification prompt for unverified sites.
           </P>
           <Sub>Server-side enrichment</Sub>
           <P>

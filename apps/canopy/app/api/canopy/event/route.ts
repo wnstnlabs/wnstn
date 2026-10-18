@@ -6,6 +6,7 @@ import { site, event } from '@/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { CanopyRuntime } from '@/lib/effect/runtime';
 import { Db } from '@/lib/effect/db';
+import { rateLimitIp, rateLimitSite } from '@/lib/rate-limit';
 
 // Drizzle + Effect ingestion — no useState/useEffect (server-only), Effect pipeline + Db Layer.
 
@@ -22,6 +23,11 @@ const Body = z.object({
   v: z.string().optional(),
   ts: z.number().optional(),
 });
+
+const VERIFICATION_BYPASS = (process.env.CANOPY_ALLOW_UNVERIFIED_DOMAINS ?? '')
+  .split(',')
+  .map((d) => d.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, ''))
+  .filter(Boolean);
 
 function hashIp(ip: string | null): string | null {
   if (!ip) return null;
@@ -90,9 +96,14 @@ export async function POST(req: NextRequest) {
 
   // Effect program: validate site via Drizzle, insert event — all through Db layer
   const program = Effect.gen(function* () {
+    if (isProd && ipHash && !rateLimitIp(ipHash)) {
+      console.warn('[canopy] event dropped: ip rate limit', { siteId });
+      return;
+    }
+
     const dbLive = yield* Db;
     const found = yield* Effect.tryPromise({
-      try: () => dbLive.select({ id: site.id, domain: site.domain }).from(site).where(eq(site.id, siteId)).limit(1),
+      try: () => dbLive.select({ id: site.id, domain: site.domain, verified: site.verified }).from(site).where(eq(site.id, siteId)).limit(1),
       catch: (cause) => new Error(String(cause)),
     });
 
@@ -117,9 +128,22 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const siteDomain = found[0]?.domain;
-    if (siteDomain && isProd && requestHost && !hostMatchesDomain(requestHost, siteDomain)) {
+    const siteRow = found[0];
+    if (siteRow && isProd && requestHost && !hostMatchesDomain(requestHost, siteRow.domain)) {
       return yield* Effect.fail({ _tag: 'ForbiddenOrigin' } as const);
+    }
+    if (
+      siteRow &&
+      isProd &&
+      !siteRow.verified &&
+      process.env.CANOPY_ALLOW_UNVERIFIED !== 'true' &&
+      !VERIFICATION_BYPASS.includes(siteRow.domain.toLowerCase())
+    ) {
+      return yield* Effect.fail({ _tag: 'UnverifiedSite' } as const);
+    }
+    if (isProd && !rateLimitSite(siteId)) {
+      console.warn('[canopy] event dropped: site rate limit', { siteId });
+      return;
     }
 
     const id = `evt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -157,6 +181,9 @@ export async function POST(req: NextRequest) {
   const causeTag = JSON.stringify(cause ?? '');
   if (causeTag.includes('ForbiddenOrigin')) {
     return NextResponse.json({ error: 'origin not allowed' }, { status: 403, headers: corsHeaders(null) });
+  }
+  if (causeTag.includes('UnverifiedSite')) {
+    return NextResponse.json({ error: 'site not verified' }, { status: 403, headers: corsHeaders(null) });
   }
   if (causeTag.includes('UnknownSite')) {
     return NextResponse.json({ error: 'unknown site' }, { status: 404, headers: corsHeaders(null) });

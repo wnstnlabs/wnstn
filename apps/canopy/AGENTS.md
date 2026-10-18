@@ -154,6 +154,16 @@ NEXT_PUBLIC_CANOPY_URL=http://localhost:3002
 BETTER_AUTH_SECRET=...
 ```
 
+Ingestion (`/api/canopy/event`) settings:
+
+```
+CANOPY_ALLOW_UNVERIFIED=true                    # bypass domain verification for all sites (temporary rollout escape hatch)
+CANOPY_ALLOW_UNVERIFIED_DOMAINS=a.com,b.com     # bypass verification for specific registered domains only
+CANOPY_RATE_LIMIT_SITE=3000                     # max events per site per minute (0 disables)
+CANOPY_RATE_LIMIT_IP=150                        # max events per visitor IP per minute (0 disables)
+CANOPY_IP_SALT=...                              # salt for IP hashing (set in production)
+```
+
 ## Build & Test
 
 ```bash
