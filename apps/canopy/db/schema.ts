@@ -154,3 +154,38 @@ export const siteRelations = relations(site, ({ many }) => ({ events: many(event
 export const eventRelations = relations(event, ({ one }) => ({
   site: one(site, { fields: [event.siteId], references: [site.id] }),
 }));
+
+export const apiKey = pgTable('api_key', {
+  id: text('id').primaryKey(),
+  siteId: text('site_id').notNull().references(() => site.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  keyHash: text('key_hash').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (t) => [
+  index('api_key_site_idx').on(t.siteId),
+  uniqueIndex('api_key_site_name_idx').on(t.siteId, t.name)
+]);
+
+export const apiKeyRelations = relations(apiKey, ({ one }) => ({
+  site: one(site, { fields: [apiKey.siteId], references: [site.id] }),
+}));
+
+export const customDomain = pgTable(
+  'custom_domain',
+  {
+    id: text('id').primaryKey(),
+    siteId: text('site_id').notNull().references(() => site.id, { onDelete: 'cascade' }),
+    domain: text('domain').notNull(),
+    verified: boolean('verified').default(false).notNull(),
+    verificationRecord: text('verification_record'),
+    verifiedAt: timestamp('verified_at'),
+    sslStatus: text('ssl_status', { enum: ['pending', 'active', 'failed'] }).default('pending').notNull(),
+    cnameTarget: text('cname_target').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex('custom_domain_domain_uidx').on(t.domain), index('custom_domain_site_idx').on(t.siteId)],
+);
+
+export const customDomainRelations = relations(customDomain, ({ one }) => ({
+  site: one(site, { fields: [customDomain.siteId], references: [site.id] }),
+}));

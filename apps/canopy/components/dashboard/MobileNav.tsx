@@ -1,8 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/DropdownMenu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@/components/ui/DropdownMenu';
+import { WorkspaceMenuItems } from './WorkspaceSwitcher';
+
+type Org = { id: string; name: string; slug: string };
 
 const links = [
   { href: '/dashboard', label: 'Overview' },
@@ -13,9 +17,12 @@ const links = [
   { href: '/dashboard/settings', label: 'Settings' },
 ];
 
-export function MobileNav({ siteId }: { siteId?: string }) {
+export function MobileNav({ siteId, orgs, activeId, activeName }: { siteId?: string; orgs: Org[]; activeId: string | null; activeName: string | null }) {
+  const [open, setOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  const displayName = activeName ?? orgs.find((o) => o.id === activeId)?.name ?? null;
 
   const withSite = (href: string) => {
     if (!siteId) return href;
@@ -25,7 +32,7 @@ export function MobileNav({ siteId }: { siteId?: string }) {
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button
           aria-label="Open menu"
@@ -35,6 +42,20 @@ export function MobileNav({ siteId }: { siteId?: string }) {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={10} className="min-w-[200px] rounded-xl border-white/[0.08] bg-[#12151d] p-1.5">
+        {orgs.length > 0 && (
+          <>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="cursor-pointer rounded-lg px-3 py-2.5 text-[13px] font-medium text-slate-300 focus:bg-white/[0.05]">
+                {displayName && <span className="size-6 shrink-0 rounded-md border border-rose-500/20 bg-rose-500/15 text-[10px] font-semibold text-rose-300 grid place-items-center">{displayName.slice(0, 1).toUpperCase()}</span>}
+                <span className="min-w-0 flex-1 truncate">{displayName ?? 'Workspace'}</span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent sideOffset={6} className="min-w-[220px] rounded-xl border-white/[0.08] bg-[#12151d] p-0 shadow-[0_8px_32px_rgba(0,0,0,0.55)]">
+                <WorkspaceMenuItems orgs={orgs} activeId={activeId} onDone={() => setOpen(false)} />
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator className="my-1.5 bg-white/[0.08]" />
+          </>
+        )}
         {links.map((l) => {
           const active = pathname === l.href;
           return (

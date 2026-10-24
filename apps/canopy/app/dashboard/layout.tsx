@@ -119,7 +119,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </Link>
 
         <div className="px-3 py-3 border-b border-white/[0.06] shrink-0">
-          <WorkspaceSwitcher orgs={orgs} activeId={activeId} activeName={orgName ?? "Elias's workspace"} />
+          <WorkspaceSwitcher orgs={orgs} activeId={activeId} activeName={orgName ?? orgs.find((o) => o.id === activeId)?.name ?? null} />
         </div>
 
         <div className="flex-1 overflow-y-auto py-4">
@@ -130,10 +130,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <div className="mono text-[10px] text-slate-700 tabular">{sites.length}</div>
           </div>
           <div className="mt-2 px-3">
-            <ClientSidebar 
+            <ClientSidebar
               activeId={activeId}
-              orgs={orgs}
-              activeName={orgName ?? "Elias's workspace"}
               initialSites={sites}
             />
           </div>
@@ -172,7 +170,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </Link>
           <div className="flex items-center gap-2">
             <span className="hidden sm:inline mono text-[10px] text-slate-500">{sites[0]?.domain ?? ''}</span>
-            <MobileNav siteId={sites[0]?.id} />
+            <MobileNav siteId={sites[0]?.id} orgs={orgs} activeId={activeId} activeName={orgName ?? orgs.find((o) => o.id === activeId)?.name ?? null} />
           </div>
         </header>
         <div className="relative flex-1 flex flex-col min-w-0">{children}</div>

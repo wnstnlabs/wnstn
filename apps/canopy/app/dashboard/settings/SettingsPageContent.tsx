@@ -13,11 +13,13 @@ import {
   Shield,
   ArrowLeft,
   Check,
+  KeyRound,
 } from 'lucide-react';
 import { SettingsGeneral } from './General';
 import { SettingsTeam } from './Team';
 import { SettingsBilling } from './Billing';
 import { SettingsDomain } from './Domain';
+import { SettingsAPIKeys } from './SettingsAPIKeys';
 
 interface SiteData {
   id: string;
@@ -66,6 +68,7 @@ interface CustomDomain {
 
 const NAV_ITEMS = [
   { id: 'general', label: 'General', icon: Settings, desc: 'Site settings' },
+  { id: 'api-keys', label: 'API Keys', icon: KeyRound, desc: 'Programmatic access' },
   { id: 'team', label: 'Team', icon: Users, desc: 'Members & access' },
   { id: 'billing', label: 'Billing', icon: CreditCard, desc: 'Subscription' },
   { id: 'domain', label: 'Domains', icon: Globe, desc: 'Custom domains' },
@@ -79,12 +82,14 @@ export function SettingsPage({
   invitations = [],
   subscription = null,
   customDomains = [],
+  infisicalEnabled = false,
 }: {
   site: SiteData;
   members?: TeamMember[];
   invitations?: Invitation[];
   subscription?: Subscription | null;
   customDomains?: CustomDomain[];
+  infisicalEnabled?: boolean;
 }) {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<NavId>(
@@ -198,6 +203,9 @@ export function SettingsPage({
             <Card className="border-white/[0.06] bg-white/[0.015] shadow-card">
               <CardContent className="p-6">
                 {activeTab === 'general' && <SettingsGeneral site={site} />}
+                {activeTab === 'api-keys' && (
+                  <SettingsAPIKeys siteId={site.id} infisicalEnabled={infisicalEnabled} />
+                )}
                 {activeTab === 'team' && (
                   <SettingsTeam
                     siteId={site.id}

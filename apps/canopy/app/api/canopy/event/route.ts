@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Effect } from 'effect';
 import { z } from 'zod';
 import crypto from 'crypto';
-import { site, event } from '@/db/schema';
+import { site, event, apiKey } from '@/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { CanopyRuntime } from '@/lib/effect/runtime';
 import { Db } from '@/lib/effect/db';
 import { rateLimitIp, rateLimitSite } from '@/lib/rate-limit';
+import { verifyApiKey } from '@/lib/infisical';
 
 // Drizzle + Effect ingestion — no useState/useEffect (server-only), Effect pipeline + Db Layer.
 
@@ -66,7 +67,7 @@ function corsHeaders(allowOrigin: string | null): Record<string, string> {
   if (allowOrigin) {
     headers['Access-Control-Allow-Origin'] = allowOrigin;
     headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS';
-    headers['Access-Control-Allow-Headers'] = 'Content-Type';
+    headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
     headers['Access-Control-Max-Age'] = '86400';
   }
   return headers;
@@ -102,6 +103,24 @@ export async function POST(req: NextRequest) {
     }
 
     const dbLive = yield* Db;
+
+    // Check for API key in Authorization header
+    const authHeader = req.headers.get('authorization');
+    const apiKeyValue = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+    if (apiKeyValue) {
+      // Find API keys for this site and validate
+      const keys = yield* Effect.tryPromise({
+        try: () => dbLive.select({ id: apiKey.id, keyHash: apiKey.keyHash }).from(apiKey).where(eq(apiKey.siteId, siteId)),
+        catch: () => [] as any[],
+      });
+
+      const valid = keys.some((k: any) => verifyApiKey(apiKeyValue, k.keyHash));
+      if (!valid) {
+        return yield* Effect.fail({ _tag: 'InvalidApiKey' } as const);
+      }
+    }
+
     const found = yield* Effect.tryPromise({
       try: () => dbLive.select({ id: site.id, domain: site.domain, verified: site.verified }).from(site).where(eq(site.id, siteId)).limit(1),
       catch: (cause) => new Error(String(cause)),
@@ -187,6 +206,9 @@ export async function POST(req: NextRequest) {
   }
   if (causeTag.includes('UnknownSite')) {
     return NextResponse.json({ error: 'unknown site' }, { status: 404, headers: corsHeaders(null) });
+  }
+  if (causeTag.includes('InvalidApiKey')) {
+    return NextResponse.json({ error: 'invalid API key' }, { status: 401, headers: corsHeaders(null) });
   }
 
   console.error('[canopy] drizzle insert failed', cause);

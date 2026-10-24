@@ -16,15 +16,11 @@ interface Site {
   verifiedAt: string | null;
 }
 
-export function ClientSidebar({ 
-  activeId, 
-  orgs, 
-  activeName,
-  initialSites 
-}: { 
+export function ClientSidebar({
+  activeId,
+  initialSites
+}: {
   activeId: string | null;
-  orgs: { id: string; name: string; slug: string }[];
-  activeName: string;
   initialSites: Site[];
 }) {
   const [sites, setSites] = useState<Site[]>(initialSites);

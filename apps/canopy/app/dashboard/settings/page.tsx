@@ -1,7 +1,7 @@
 import { Effect } from 'effect';
 import { CanopyRuntime } from '@/lib/effect/runtime';
 import { Db } from '@/lib/effect/db';
-import { member, user, invitation, site } from '@/db/schema';
+import { member, user, invitation, site, customDomain } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { resolveSites } from '@/lib/resolve-sites';
 import { SettingsPage } from './SettingsPageContent';
@@ -28,6 +28,11 @@ export default async function SettingsRoutePage({ searchParams }: { searchParams
 
     const siteRows = (yield* Effect.tryPromise({
       try: () => db.select().from(site).where(eq(site.id, current.id)).limit(1),
+      catch: () => [] as any,
+    })) as any[];
+
+    const customDomains = (yield* Effect.tryPromise({
+      try: () => db.select().from(customDomain).where(eq(customDomain.siteId, current.id)).orderBy(customDomain.createdAt),
       catch: () => [] as any,
     })) as any[];
 
@@ -75,11 +80,11 @@ export default async function SettingsRoutePage({ searchParams }: { searchParams
       catch: () => [] as any,
     })) as any[];
 
-    return { site: siteRows[0] ?? null, members, invitations };
+    return { site: siteRows[0] ?? null, customDomains, members, invitations };
   });
 
-  const { site: siteRow, members, invitations }: any = await CanopyRuntime.runPromise(
-    program.pipe(Effect.catchAll(() => Effect.succeed({ site: null, members: [], invitations: [] })))
+  const { site: siteRow, customDomains, members, invitations }: any = await CanopyRuntime.runPromise(
+    program.pipe(Effect.catchAll(() => Effect.succeed({ site: null, customDomains: [], members: [], invitations: [] })))
   );
 
   const siteData = siteRow
@@ -102,6 +107,15 @@ export default async function SettingsRoutePage({ searchParams }: { searchParams
         createdAt: new Date().toISOString(),
       };
 
+  const customDomainsData = customDomains.map((d: any) => ({
+    id: d.id,
+    domain: d.domain,
+    verified: d.verified ?? false,
+    sslStatus: d.sslStatus ?? 'pending',
+    cnameTarget: d.cnameTarget ?? 'cname.cano-py.wnstn.space',
+    createdAt: d.createdAt?.toISOString?.() ?? String(d.createdAt),
+  }));
+
   return (
     <SettingsPage
       site={siteData}
@@ -110,6 +124,8 @@ export default async function SettingsRoutePage({ searchParams }: { searchParams
         createdAt: m.createdAt?.toISOString?.() ?? String(m.createdAt),
       }))}
       invitations={invitations}
+      customDomains={customDomainsData}
+      infisicalEnabled={Boolean(process.env.INFISICAL_SITE_URL)}
     />
   );
 }
