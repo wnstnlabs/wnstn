@@ -8,11 +8,16 @@ import { Db } from '@/lib/effect/db';
 import { db } from '@/lib/db';
 import { site, member, organization } from '@/db/schema';
 import { desc, eq, sql } from 'drizzle-orm';
+import { randomBytes } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
 function slugify(domain: string) {
   return domain.toLowerCase().replace(/[^a-z0-9]/g, '-');
+}
+
+function genRecord(): string {
+  return `canopy-site=${randomBytes(16).toString('hex')}`;
 }
 
 export async function GET() {
@@ -77,9 +82,11 @@ export async function POST(req: Request) {
     orgId = newOrgId;
   }
 
+  const verificationRecord = genRecord();
+
   await db
     .insert(site)
-    .values({ id, domain: domainRaw, name: domainRaw, organizationId: orgId, createdById: session.user.id, createdAt: new Date(), public: false, verificationRecord: null, verified: false, verifiedAt: null })
+    .values({ id, domain: domainRaw, name: domainRaw, organizationId: orgId, createdById: session.user.id, createdAt: new Date(), public: false, verificationRecord, verified: false, verifiedAt: null })
     .onConflictDoNothing();
 
   return NextResponse.json({ id, domain: domainRaw });
