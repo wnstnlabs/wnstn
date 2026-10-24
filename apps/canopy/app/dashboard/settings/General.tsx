@@ -298,22 +298,40 @@ export function SettingsGeneral({ site }: { site: SiteData }) {
           {!site.verified && (
             <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
               <p className="text-sm text-slate-400 mb-3">Add this TXT record to your DNS provider:</p>
-              <div className="flex gap-2">
-                <code className="flex-1 mono text-sm bg-black/30 rounded px-3 py-2 break-all">
-                  {site.verificationRecord || 'canopy-verify=xxxxxxxxxx'}
-                </code>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(site.verificationRecord);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                >
-                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4 mr-2" />}
-                  {copied ? 'Copied' : 'Copy'}
-                </Button>
+              <div className="grid gap-4 md:grid-cols-4">
+                <div className="space-y-2">
+                  <Label className="text-slate-400 text-xs uppercase tracking-wide">Record Type</Label>
+                  <code className="mono text-sm bg-black/30 rounded px-3 py-2 block break-all">TXT</code>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-slate-400 text-xs uppercase tracking-wide">Host / Name</Label>
+                  <code className="mono text-sm bg-black/30 rounded px-3 py-2 block break-all">@</code>
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label className="text-slate-400 text-xs uppercase tracking-wide">Value / Target</Label>
+                  <div className="flex gap-2">
+                    <code className="flex-1 mono text-sm bg-black/30 rounded px-3 py-2 break-all">
+                      {site.verificationRecord || 'canopy-site=xxxxxxxxxx'}
+                    </code>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const record = site.verificationRecord || 'canopy-site=xxxxxxxxxx';
+                        navigator.clipboard.writeText(record);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                    >
+                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4 mr-2" />}
+                      {copied ? 'Copied' : 'Copy'}
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-slate-400 text-xs uppercase tracking-wide">TTL</Label>
+                  <code className="mono text-sm bg-black/30 rounded px-3 py-2 block">300 (5 minutes)</code>
+                </div>
               </div>
               <p className="text-xs text-slate-500 mt-2">
                 DNS changes can take up to 48 hours to propagate. We'll check automatically.
