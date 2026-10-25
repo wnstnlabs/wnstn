@@ -5,6 +5,11 @@ import { member, user, invitation, site, customDomain } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { resolveSites } from '@/lib/resolve-sites';
 import { SettingsPage } from './SettingsPageContent';
+import { randomBytes } from 'crypto';
+
+function genRecord(): string {
+  return `canopy-site=${randomBytes(16).toString('hex')}`;
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -80,7 +85,18 @@ export default async function SettingsRoutePage({ searchParams }: { searchParams
       catch: () => [] as any,
     })) as any[];
 
-    return { site: siteRows[0] ?? null, customDomains, members, invitations };
+    const siteRowResult = siteRows[0] ?? null;
+    // Ensure every site has a verification record so the UI shows a real value
+    if (siteRowResult && !siteRowResult.verificationRecord) {
+      const record = genRecord();
+      yield* Effect.tryPromise({
+        try: () => db.update(site).set({ verificationRecord: record }).where(eq(site.id, current.id)),
+        catch: () => new Error('Failed to set verification record'),
+      });
+      siteRowResult.verificationRecord = record;
+    }
+
+    return { site: siteRowResult, customDomains, members, invitations };
   });
 
   const { site: siteRow, customDomains, members, invitations }: any = await CanopyRuntime.runPromise(
