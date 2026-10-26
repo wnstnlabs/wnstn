@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,6 +46,7 @@ export function SettingsGeneral({ site }: { site: SiteData }) {
   const [deleting, setDeleting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [copied, setCopied] = useState(false);
+  const [localRecord, setLocalRecord] = useState(site.verificationRecord || '');
 
   const form = useForm<SiteFormData>({
     resolver: zodResolver(siteSchema),
@@ -58,6 +59,20 @@ export function SettingsGeneral({ site }: { site: SiteData }) {
       sampleRate: 1,
     },
   });
+
+  // Fetch/generate verification record if the server didn't provide one
+  useEffect(() => {
+    if (!localRecord && site.id) {
+      fetch(`/api/verify?site=${encodeURIComponent(site.id)}`, { credentials: 'include' })
+        .then((res) => res.json())
+        .then((json: any) => {
+          if (json.record) {
+            setLocalRecord(json.record);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [site.id, localRecord]);
 
   const onSubmit = async (data: SiteFormData) => {
     try {
@@ -311,13 +326,13 @@ export function SettingsGeneral({ site }: { site: SiteData }) {
                   <Label className="text-slate-400 text-xs uppercase tracking-wide">Value / Target</Label>
                   <div className="flex gap-2">
                     <code className="flex-1 mono text-sm bg-black/30 rounded px-3 py-2 break-all">
-                      {site.verificationRecord || 'canopy-site=xxxxxxxxxx'}
+                      {localRecord || 'canopy-site=xxxxxxxxxx'}
                     </code>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        const record = site.verificationRecord || 'canopy-site=xxxxxxxxxx';
+                        const record = localRecord || 'canopy-site=xxxxxxxxxx';
                         navigator.clipboard.writeText(record);
                         setCopied(true);
                         setTimeout(() => setCopied(false), 2000);
